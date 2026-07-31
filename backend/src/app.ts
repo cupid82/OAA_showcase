@@ -5,7 +5,6 @@ import morgan from 'morgan';
 
 import { env, isProduction } from './config/env.js';
 import { healthRouter } from './routes/health.js';
-import { itemsRouter } from './routes/items.js';
 import { notFound } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -24,7 +23,6 @@ export function createApp() {
   app.use(morgan(isProduction ? 'combined' : 'dev'));
 
   app.use('/api/health', healthRouter);
-  app.use('/api/items', itemsRouter);
 
   app.use(notFound);
   app.use(errorHandler);
