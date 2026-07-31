@@ -1,5 +1,4 @@
 import { Icon } from '@/components/ui/Icon';
-import { Placeholder } from '@/pages/landing/components/Placeholder';
 import { Section } from '@/pages/landing/components/Section';
 import { formatDate } from '@/pages/landing/format';
 import { NEWS } from '@/pages/landing/landingData';
@@ -8,40 +7,41 @@ export function News() {
   return (
     <Section
       id="news"
+      index="06"
       eyebrow="Newsroom"
       title="Latest news"
       description="Research, results and what is changing on campus."
       className="bg-white"
     >
-      <div className="grid gap-6 sm:grid-cols-2">
-        {NEWS.map((item, index) => (
-          <article
-            key={item.title}
-            className="group flex flex-col overflow-hidden rounded-xl border border-ink-200 bg-white shadow-card transition hover:border-brand-300 hover:shadow-lg"
-          >
-            <Placeholder
-              label={item.category}
-              index={index}
-              showLabel={false}
-              className="aspect-16/7"
-            />
-            <div className="flex flex-1 flex-col p-5">
-              <div className="flex items-center gap-3 text-xs text-ink-500">
-                <span className="rounded-full bg-brand-50 px-2.5 py-1 font-semibold text-brand-700">
-                  {item.category}
-                </span>
-                <time dateTime={item.date}>{formatDate(item.date)}</time>
+      <ul className="border-t border-ink-300">
+        {NEWS.map((item) => (
+          <li key={item.title}>
+            <a
+              href="#news"
+              className="group grid gap-x-8 gap-y-3 border-b border-ink-200 py-7 transition hover:bg-ink-50 lg:grid-cols-[180px_minmax(0,1fr)_auto]"
+            >
+              <div className="kicker flex items-center gap-3 text-ink-500 lg:block">
+                <time dateTime={item.date} className="block">
+                  {formatDate(item.date)}
+                </time>
+                <span className="text-brand-600 lg:mt-2 lg:block">{item.category}</span>
               </div>
-              <h3 className="mt-3 font-semibold text-ink-900">{item.title}</h3>
-              <p className="mt-2 flex-1 text-sm text-ink-600">{item.excerpt}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-700">
-                Read more
-                <Icon name="arrowRight" className="size-4 transition group-hover:translate-x-0.5" />
+
+              <div>
+                <h3 className="font-serif text-xl leading-snug text-ink-900">{item.title}</h3>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-600">
+                  {item.excerpt}
+                </p>
+              </div>
+
+              <span className="kicker flex items-center gap-2 self-center text-ink-400 transition group-hover:text-brand-600">
+                Read
+                <Icon name="arrowRight" className="size-4 transition group-hover:translate-x-1" />
               </span>
-            </div>
-          </article>
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   );
 }

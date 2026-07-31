@@ -31,8 +31,11 @@
   --color-ink-700: #334155;
   --color-ink-800: #1e293b;
   --color-ink-900: #0f172a;
+  --color-ink-950: #070b16;
 
   --font-sans: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Consolas, monospace;
 
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px -12px rgb(15 23 42 / 0.18);
 }
@@ -60,4 +63,32 @@ body {
 /* One focus ring for every interactive element. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   @apply outline-2 outline-offset-2 outline-brand-600;
+}
+
+/* Mono, uppercase, wide-tracked — every label, kicker and button on the site. */
+@utility kicker {
+  @apply font-mono text-[11px] font-medium tracking-[0.2em] uppercase;
+}
+
+/*
+ * A dark colour field on its own reads as generic. These two put crisp
+ * high-frequency structure on top of it: a drafting grid, then a dot lattice at
+ * half the pitch. Always paired, always over a dark surface.
+ */
+@utility drafting {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+@utility lattice {
+  background-image: radial-gradient(rgb(255 255 255 / 0.18) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* The same lattice inverted, for image plates on paper. */
+@utility lattice-ink {
+  background-image: radial-gradient(rgb(15 23 42 / 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
 }

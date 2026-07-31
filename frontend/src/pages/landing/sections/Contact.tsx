@@ -10,6 +10,9 @@ const DETAILS = [
   { icon: 'mail', label: 'Email', value: COLLEGE.email },
 ] as const;
 
+const FIELD =
+  'w-full border-b border-ink-300 bg-transparent py-2.5 text-ink-900 transition focus:border-brand-600';
+
 export function Contact() {
   const [submitted, setSubmitted] = useState(false);
 
@@ -22,24 +25,21 @@ export function Contact() {
   return (
     <Section
       id="contact"
+      index="10"
       eyebrow="Get in touch"
       title="Contact us"
       description="Admissions, academics or anything else — the office replies within two working days."
       className="bg-white"
     >
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-12 lg:grid-cols-2">
         <div>
-          <dl className="space-y-5">
+          <dl className="border-t border-ink-300">
             {DETAILS.map((detail) => (
-              <div key={detail.label} className="flex gap-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                  <Icon name={detail.icon} />
-                </span>
+              <div key={detail.label} className="flex gap-5 border-b border-ink-200 py-5">
+                <Icon name={detail.icon} className="mt-0.5 size-5 shrink-0 text-brand-600" />
                 <div>
-                  <dt className="text-xs font-semibold tracking-wide text-ink-500 uppercase">
-                    {detail.label}
-                  </dt>
-                  <dd className="mt-0.5 text-ink-800">{detail.value}</dd>
+                  <dt className="kicker text-ink-500">{detail.label}</dt>
+                  <dd className="mt-1.5 text-ink-800">{detail.value}</dd>
                 </div>
               </div>
             ))}
@@ -48,88 +48,51 @@ export function Contact() {
           <div
             role="img"
             aria-label="Placeholder for the campus location map"
-            className="mt-8 flex aspect-16/9 items-center justify-center rounded-xl border border-dashed border-ink-300 bg-ink-100 text-sm text-ink-500"
+            className="lattice-ink mt-8 flex aspect-16/9 items-center justify-center border border-ink-300 bg-ink-100"
           >
-            Map embed goes here
+            <span className="kicker bg-ink-100 px-3 text-ink-500">Map embed</span>
           </div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-ink-200 bg-ink-50 p-6 shadow-card"
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <label
-                htmlFor="contact-name"
-                className="mb-1.5 block text-sm font-medium text-ink-700"
-              >
+              <label htmlFor="contact-name" className="kicker block text-ink-500">
                 Full name
               </label>
-              <input
-                id="contact-name"
-                name="name"
-                required
-                className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5 text-sm"
-              />
+              <input id="contact-name" name="name" required className={FIELD} />
             </div>
             <div>
-              <label
-                htmlFor="contact-email"
-                className="mb-1.5 block text-sm font-medium text-ink-700"
-              >
+              <label htmlFor="contact-email" className="kicker block text-ink-500">
                 Email
               </label>
-              <input
-                id="contact-email"
-                name="email"
-                type="email"
-                required
-                className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5 text-sm"
-              />
+              <input id="contact-email" name="email" type="email" required className={FIELD} />
             </div>
           </div>
 
-          <div className="mt-4">
-            <label
-              htmlFor="contact-subject"
-              className="mb-1.5 block text-sm font-medium text-ink-700"
-            >
+          <div className="mt-6">
+            <label htmlFor="contact-subject" className="kicker block text-ink-500">
               Subject
             </label>
-            <input
-              id="contact-subject"
-              name="subject"
-              required
-              className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5 text-sm"
-            />
+            <input id="contact-subject" name="subject" required className={FIELD} />
           </div>
 
-          <div className="mt-4">
-            <label
-              htmlFor="contact-message"
-              className="mb-1.5 block text-sm font-medium text-ink-700"
-            >
+          <div className="mt-6">
+            <label htmlFor="contact-message" className="kicker block text-ink-500">
               Message
             </label>
-            <textarea
-              id="contact-message"
-              name="message"
-              rows={5}
-              required
-              className="w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5 text-sm"
-            />
+            <textarea id="contact-message" name="message" rows={5} required className={FIELD} />
           </div>
 
           <button
             type="submit"
-            className="mt-5 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+            className="kicker mt-8 border border-brand-600 bg-brand-600 px-6 py-3 text-white transition hover:border-brand-500 hover:bg-brand-500"
           >
             Send message
           </button>
 
           {submitted && (
-            <p role="status" className="mt-3 text-sm text-ink-600">
+            <p role="status" className="mt-4 border-l-2 border-brand-600 pl-3 text-sm text-ink-600">
               This form has no backend yet — nothing was sent. Wire it up when the contact endpoint
               exists.
             </p>

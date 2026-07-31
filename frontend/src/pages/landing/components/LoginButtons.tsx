@@ -10,14 +10,16 @@ const LABEL: Record<string, string> = {
 };
 
 interface LoginButtonsProps {
-  /** `solid` for the hero, `compact` for the nav bar. */
-  variant?: 'solid' | 'compact';
+  /** `onDark` for the hero and footer, `compact` for the nav bar. */
+  variant?: 'onDark' | 'compact';
   className?: string;
   onNavigate?: () => void;
 }
 
 /** The three role entry points. Each preselects its tab on the login page. */
 export function LoginButtons({ variant = 'compact', className, onNavigate }: LoginButtonsProps) {
+  const dark = variant === 'onDark';
+
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       {ROLES.map((role, index) => (
@@ -26,17 +28,15 @@ export function LoginButtons({ variant = 'compact', className, onNavigate }: Log
           to={`/login?role=${role}`}
           onClick={onNavigate}
           className={cn(
-            'rounded-lg px-4 py-2 text-sm font-semibold transition',
-            variant === 'solid'
-              ? index === 0
-                ? 'bg-white text-brand-800 hover:bg-brand-50'
-                : 'border border-white/40 text-white hover:bg-white/10'
-              : index === 0
-                ? 'bg-brand-600 text-white hover:bg-brand-700'
-                : 'border border-ink-200 text-ink-700 hover:bg-ink-100',
+            'kicker border px-4 py-2.5 transition',
+            index === 0
+              ? 'border-brand-600 bg-brand-600 text-white hover:border-brand-500 hover:bg-brand-500'
+              : dark
+                ? 'border-white/25 text-ink-200 hover:border-white/70 hover:text-white'
+                : 'border-ink-300 text-ink-600 hover:border-ink-900 hover:text-ink-900',
           )}
         >
-          {LABEL[role]} login
+          {LABEL[role]}
         </Link>
       ))}
     </div>

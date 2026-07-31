@@ -6,19 +6,18 @@ export function Gallery() {
   return (
     <Section
       id="gallery"
+      index="05"
       eyebrow="Campus"
       title="Around the campus"
       description="Forty-two acres of labs, libraries, hostels and open ground."
-      centered
       className="bg-ink-50"
     >
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {GALLERY.map((caption, index) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {GALLERY.map((caption) => (
           <Placeholder
             key={caption}
             label={caption}
-            index={index}
-            className="aspect-4/3 transition hover:brightness-110"
+            className="aspect-4/3 transition hover:border-brand-500"
           />
         ))}
       </div>

@@ -1,4 +1,4 @@
-import { Icon } from '@/components/ui/Icon';
+import { cn } from '@/lib/cn';
 import { Section } from '@/pages/landing/components/Section';
 import { TESTIMONIALS } from '@/pages/landing/landingData';
 
@@ -14,30 +14,39 @@ export function Testimonials() {
   return (
     <Section
       id="testimonials"
+      index="09"
       eyebrow="Alumni"
       title="What our graduates say"
-      centered
+      description="Three of the 4,200 records this portal keeps — and what came of them."
       className="bg-ink-50"
     >
-      <div className="grid gap-6 lg:grid-cols-3">
-        {TESTIMONIALS.map((item) => (
+      <div className="grid border-t border-ink-300 lg:grid-cols-3">
+        {TESTIMONIALS.map((item, index) => (
           <figure
             key={item.name}
-            className="flex flex-col rounded-xl border border-ink-200 bg-white p-6 shadow-card"
+            className={cn(
+              'flex flex-col border-b border-ink-300 py-8 lg:border-b-0 lg:px-8 lg:first:pl-0 lg:last:pr-0',
+              index > 0 && 'lg:border-l lg:border-ink-300',
+            )}
           >
-            <Icon name="quote" className="size-7 text-brand-300" />
-            <blockquote className="mt-4 flex-1 text-ink-700">{item.quote}</blockquote>
-            <figcaption className="mt-6 flex items-center gap-3 border-t border-ink-200 pt-4">
+            <blockquote className="flex-1 font-serif text-xl leading-relaxed text-ink-800">
+              <span aria-hidden="true" className="mr-1 text-brand-500">
+                “
+              </span>
+              {item.quote}
+            </blockquote>
+
+            <figcaption className="mt-8 flex items-center gap-4 border-t border-ink-200 pt-5">
               <span
                 aria-hidden="true"
-                className="flex size-11 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700"
+                className="kicker flex size-11 shrink-0 items-center justify-center border border-ink-300 text-ink-600"
               >
                 {initials(item.name)}
               </span>
               <span>
-                <span className="block text-sm font-semibold text-ink-900">{item.name}</span>
-                <span className="block text-xs text-ink-500">{item.batch}</span>
-                <span className="block text-xs text-ink-500">{item.company}</span>
+                <span className="block font-serif text-lg text-ink-900">{item.name}</span>
+                <span className="kicker mt-1 block text-ink-500">{item.batch}</span>
+                <span className="mt-1 block text-sm text-brand-700">{item.company}</span>
               </span>
             </figcaption>
           </figure>

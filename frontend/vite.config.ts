@@ -11,7 +11,10 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,
     port: 5173,
+    // Drift to 5174 breaks the CORS origin and any redirect allowlist silently.
+    strictPort: true,
     // Calls to /api/* are proxied to the backend, so the browser sees one origin in dev.
     proxy: {
       '/api': {

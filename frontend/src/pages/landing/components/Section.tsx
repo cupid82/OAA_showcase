@@ -4,39 +4,40 @@ import { cn } from '@/lib/cn';
 
 interface SectionProps {
   id: string;
+  /** Two-digit section number, printed in the rule above the heading. */
+  index: string;
   eyebrow?: string;
   title: string;
   description?: string;
   children: ReactNode;
   className?: string;
-  /** Centres the heading block — used by the wider, card-based sections. */
-  centered?: boolean;
 }
 
 export function Section({
   id,
+  index,
   eyebrow,
   title,
   description,
   children,
   className,
-  centered = false,
 }: SectionProps) {
   return (
-    <section id={id} className={cn('py-16 sm:py-20', className)}>
+    <section id={id} className={cn('py-16 sm:py-24', className)}>
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className={cn('max-w-2xl', centered && 'mx-auto text-center')}>
-          {eyebrow && (
-            <p className="text-xs font-semibold tracking-widest text-brand-600 uppercase">
-              {eyebrow}
-            </p>
-          )}
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
+        <div className="flex items-center gap-4 border-t border-ink-300 pt-4">
+          <span className="kicker text-brand-600">{index}</span>
+          {eyebrow && <span className="kicker text-ink-500">{eyebrow}</span>}
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end">
+          <h2 className="font-serif text-[clamp(1.75rem,3.4vw,2.75rem)] leading-[1.1] font-normal text-ink-900">
             {title}
           </h2>
-          {description && <p className="mt-3 text-ink-600">{description}</p>}
+          {description && <p className="text-ink-600 lg:pb-2">{description}</p>}
         </div>
-        <div className="mt-10">{children}</div>
+
+        <div className="mt-12">{children}</div>
       </div>
     </section>
   );

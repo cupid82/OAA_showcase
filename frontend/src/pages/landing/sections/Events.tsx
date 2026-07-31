@@ -7,34 +7,38 @@ export function Events() {
   return (
     <Section
       id="events"
+      index="07"
       eyebrow="What's on"
       title="Upcoming events"
       description="Symposiums, workshops, sports and outreach — participation counts towards the social dimension of every student's ability score."
       className="bg-ink-50"
     >
-      <ul className="grid gap-4 sm:grid-cols-2">
+      <ul className="border-t border-ink-300">
         {EVENTS.map((event) => {
           const { day, month } = dateParts(event.date);
 
           return (
             <li
               key={event.title}
-              className="flex items-center gap-4 rounded-xl border border-ink-200 bg-white p-5 shadow-card"
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-5 gap-y-4 border-b border-ink-200 py-6 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-8"
             >
-              <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-lg bg-brand-600 text-white">
-                <span className="text-xl leading-none font-semibold">{day}</span>
-                <span className="mt-1 text-[11px] tracking-wider">{month}</span>
+              <div className="flex w-14 flex-col self-start border-r border-ink-300 pr-4 sm:self-center">
+                <span className="font-serif text-3xl leading-none text-ink-900">{day}</span>
+                <span className="kicker mt-1.5 text-brand-600">{month}</span>
               </div>
+
               <div className="min-w-0">
-                <span className="rounded-full bg-accent-400/20 px-2.5 py-1 text-xs font-semibold text-accent-600">
-                  {event.type}
-                </span>
-                <h3 className="mt-2 font-semibold text-ink-900">{event.title}</h3>
-                <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-500">
-                  <Icon name="pin" className="size-4" />
+                <h3 className="font-serif text-xl leading-snug text-ink-900">{event.title}</h3>
+                <p className="mt-1.5 flex items-center gap-1.5 text-sm text-ink-500">
+                  <Icon name="pin" className="size-4 shrink-0" />
                   {event.venue}
                 </p>
               </div>
+
+              {/* Its own row below the date on mobile; trailing column from sm. */}
+              <span className="kicker col-span-2 justify-self-start border border-ink-300 px-3 py-1.5 text-ink-600 sm:col-span-1 sm:justify-self-end">
+                {event.type}
+              </span>
             </li>
           );
         })}

@@ -4,51 +4,61 @@ import { COLLEGE } from '@/pages/landing/landingData';
 
 export function Hero() {
   return (
-    <section className="relative isolate overflow-hidden bg-brand-900 text-white">
-      {/* Placeholder for the campus photograph. */}
+    <section className="relative isolate overflow-hidden bg-ink-950 text-white">
+      {/* Dark, slow-moving colour field. Everything crisp sits on top of it. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600"
+        className="absolute inset-0 -z-30 bg-linear-to-b from-ink-950 via-brand-950 to-ink-950"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-30"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 15% 25%, rgba(255,255,255,0.5) 0, transparent 40%), radial-gradient(circle at 85% 15%, rgba(251,191,36,0.6) 0, transparent 35%)',
-        }}
+        className="drafting absolute inset-0 -z-20 [mask-image:radial-gradient(120%_100%_at_20%_0%,black,transparent_75%)]"
+      />
+      <div
+        aria-hidden="true"
+        className="lattice absolute inset-0 -z-10 opacity-70 [mask-image:radial-gradient(90%_80%_at_78%_5%,black,transparent_65%)]"
       />
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-        <div className="max-w-2xl">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium tracking-wide text-brand-100 ring-1 ring-white/20">
-            <Icon name="sparkle" className="size-4" />
-            Overall Ability Assessment · beyond marks alone
+      <div className="mx-auto w-full max-w-6xl px-4 pt-16 pb-14 sm:px-6 sm:pt-24 sm:pb-20">
+        <div className="max-w-3xl">
+          <p className="kicker flex items-center gap-3 text-brand-200">
+            <span aria-hidden="true" className="h-px w-8 bg-brand-400" />
+            Overall Ability Assessment
           </p>
 
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{COLLEGE.name}</h1>
-          <p className="mt-3 text-xl font-medium text-accent-400">{COLLEGE.tagline}</p>
-          <p className="mt-5 max-w-xl text-base text-brand-100 sm:text-lg">{COLLEGE.intro}</p>
+          <h1 className="mt-6 font-serif text-[clamp(2.25rem,6vw,4.25rem)] leading-[1.05] font-normal tracking-tight">
+            {COLLEGE.name}
+          </h1>
 
-          <LoginButtons variant="solid" className="mt-8" />
+          <p className="mt-4 font-serif text-xl text-brand-300 italic sm:text-2xl">
+            {COLLEGE.tagline}
+          </p>
 
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm text-brand-100">
-            {COLLEGE.accreditations.map((item) => (
-              <span key={item} className="flex items-center gap-2">
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-accent-400" />
-                {item}
-              </span>
-            ))}
-          </div>
+          <p className="mt-6 max-w-xl border-l border-brand-400/60 pl-4 text-base leading-relaxed text-ink-300 sm:text-lg">
+            {COLLEGE.intro}
+          </p>
+
+          <LoginButtons variant="onDark" className="mt-9" />
 
           <a
             href="#courses"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white underline underline-offset-4 hover:text-accent-400"
+            className="kicker mt-6 inline-flex items-center gap-2 text-ink-300 transition hover:text-white"
           >
             Explore our courses
             <Icon name="arrowRight" className="size-4" />
           </a>
         </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl border-t border-white/15 px-4 sm:px-6">
+        <ul className="flex flex-wrap gap-x-8 gap-y-2 py-5">
+          {COLLEGE.accreditations.map((item) => (
+            <li key={item} className="kicker flex items-center gap-2 text-ink-400">
+              <span aria-hidden="true" className="size-1 bg-brand-400" />
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
