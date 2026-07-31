@@ -13,10 +13,8 @@ interface SidebarProps {
 
 export function Sidebar({ role, onNavigate }: SidebarProps) {
   return (
-    <nav aria-label="Section navigation" className="flex h-full flex-col gap-1 p-4">
-      <p className="px-3 pb-2 text-xs font-semibold tracking-wider text-ink-400 uppercase">
-        {ROLE_LABEL[role]}
-      </p>
+    <nav aria-label="Section navigation" className="flex h-full flex-col px-5 py-6">
+      <p className="kicker pb-4 text-ink-400">{ROLE_LABEL[role]}</p>
 
       {NAV_BY_ROLE[role].map((item) => (
         <NavLink
@@ -27,15 +25,19 @@ export function Sidebar({ role, onNavigate }: SidebarProps) {
           onClick={onNavigate}
           className={({ isActive }) =>
             cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
+              'flex items-center gap-3 border-l-2 py-2.5 pl-4 text-sm transition',
               isActive
-                ? 'bg-brand-50 text-brand-700'
-                : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+                ? 'border-brand-600 text-ink-900'
+                : 'border-transparent text-ink-600 hover:border-ink-300 hover:text-ink-900',
             )
           }
         >
-          <Icon name={item.icon} />
-          {item.label}
+          {({ isActive }) => (
+            <>
+              <Icon name={item.icon} className={cn('size-5', isActive && 'text-brand-600')} />
+              {item.label}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>

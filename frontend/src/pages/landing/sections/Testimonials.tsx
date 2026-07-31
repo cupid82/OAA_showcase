@@ -18,7 +18,7 @@ export function Testimonials() {
       eyebrow="Alumni"
       title="What our graduates say"
       description="Three of the 4,200 records this portal keeps — and what came of them."
-      className="bg-ink-50"
+      className="bg-blush-50"
     >
       <div className="grid border-t border-ink-300 lg:grid-cols-3">
         {TESTIMONIALS.map((item, index) => (

@@ -24,7 +24,7 @@ export function ComingSoon({ title, step, description }: ComingSoonProps) {
         action={
           <Link
             to="/"
-            className="text-sm font-medium text-brand-700 underline underline-offset-4 hover:text-brand-800"
+            className="kicker text-brand-700 underline underline-offset-4 hover:text-brand-600"
           >
             Back to the portal home
           </Link>

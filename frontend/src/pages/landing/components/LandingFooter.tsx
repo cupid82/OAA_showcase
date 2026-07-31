@@ -1,4 +1,3 @@
-import { Icon } from '@/components/ui/Icon';
 import { LoginButtons } from '@/pages/landing/components/LoginButtons';
 import { COLLEGE, DEPARTMENTS, FOOTER_LINKS } from '@/pages/landing/landingData';
 
@@ -6,19 +5,25 @@ const SOCIALS = ['Facebook', 'Instagram', 'LinkedIn', 'YouTube'];
 
 export function LandingFooter() {
   return (
-    <footer className="relative isolate overflow-hidden bg-ink-950 text-ink-400">
+    <footer className="relative isolate overflow-hidden bg-brand-950 text-brand-200">
       <div aria-hidden="true" className="drafting absolute inset-0 -z-10 opacity-60" />
 
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-4">
         <div>
-          <div className="flex items-center gap-3 text-white">
-            <span className="flex size-9 items-center justify-center bg-brand-600">
-              <Icon name="cap" className="size-5" />
-            </span>
-            <span className="font-serif text-lg">{COLLEGE.short}</span>
+          <div className="flex items-baseline gap-2.5 text-white">
+            <span className="font-serif text-xl">{COLLEGE.short}</span>
+            <span className="kicker text-brand-300">Est. {COLLEGE.established}</span>
           </div>
-          <p className="mt-5 font-serif text-lg text-ink-200">{COLLEGE.name}</p>
-          <p className="mt-4 text-sm leading-relaxed">{COLLEGE.address}</p>
+          <p className="mt-5 font-serif text-lg text-white">{COLLEGE.name}</p>
+          <ul className="mt-4 space-y-1.5">
+            {COLLEGE.accreditations.map((item) => (
+              <li key={item} className="kicker flex items-center gap-2">
+                <span aria-hidden="true" className="size-1 bg-brand-400" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-sm leading-relaxed">{COLLEGE.address}</p>
           <p className="mt-3 text-sm">{COLLEGE.phone}</p>
           <p className="text-sm">{COLLEGE.email}</p>
         </div>

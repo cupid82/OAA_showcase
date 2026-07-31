@@ -14,13 +14,13 @@ export function EmptyState({ title, description, action, className }: EmptyState
   return (
     <div
       className={cn(
-        'flex flex-col items-center rounded-xl border border-dashed border-ink-300 bg-white px-6 py-12 text-center',
+        'lattice-ink flex flex-col items-center border border-ink-300 px-6 py-14 text-center',
         className,
       )}
     >
       <span
         aria-hidden="true"
-        className="mb-3 flex size-10 items-center justify-center rounded-full bg-ink-100 text-ink-400"
+        className="mb-4 flex size-10 items-center justify-center border border-ink-300 bg-ink-50 text-ink-400"
       >
         <svg
           viewBox="0 0 24 24"
@@ -32,8 +32,8 @@ export function EmptyState({ title, description, action, className }: EmptyState
           <path d="M4 7h16M4 12h10M4 17h7" strokeLinecap="round" />
         </svg>
       </span>
-      <p className="text-sm font-semibold text-ink-800">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-ink-500">{description}</p>}
+      <p className="font-serif text-xl text-ink-900">{title}</p>
+      {description && <p className="mt-2 max-w-sm text-sm text-ink-600">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

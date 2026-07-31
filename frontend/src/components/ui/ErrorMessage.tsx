@@ -16,15 +16,15 @@ export function ErrorMessage({
   return (
     <div
       role="alert"
-      className={cn('rounded-xl border border-red-200 bg-red-50 p-4 text-red-800', className)}
+      className={cn('border-l-2 border-red-400 bg-red-50/70 px-4 py-3.5 text-red-800', className)}
     >
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="mt-1 text-sm text-red-700">{message}</p>
+      <p className="kicker">{title}</p>
+      <p className="mt-1.5 text-sm text-red-700">{message}</p>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
+          className="kicker mt-3 border border-red-300 bg-white px-3 py-2 text-red-700 transition hover:bg-red-100"
         >
           Try again
         </button>

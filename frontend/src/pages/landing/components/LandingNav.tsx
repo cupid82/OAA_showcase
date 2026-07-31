@@ -11,14 +11,9 @@ export function LandingNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-ink-200 bg-white/92 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center bg-ink-900 text-white">
-            <Icon name="cap" className="size-5" />
-          </span>
-          <span className="leading-tight">
-            <span className="block font-serif text-lg text-ink-900">{COLLEGE.short}</span>
-            <span className="kicker block text-ink-500">Est. {COLLEGE.established}</span>
-          </span>
+        <Link to="/" className="flex items-baseline gap-2.5">
+          <span className="font-serif text-xl text-ink-900">{COLLEGE.short}</span>
+          <span className="kicker text-ink-400">Est. {COLLEGE.established}</span>
         </Link>
 
         <nav aria-label="Sections" className="hidden items-center gap-6 lg:flex">
@@ -33,9 +28,13 @@ export function LandingNav() {
           ))}
         </nav>
 
-        <div className="ml-auto hidden lg:block">
-          <LoginButtons />
-        </div>
+        {/* One quiet way in from the nav — the three role cards in the hero are the real entry. */}
+        <Link
+          to="/login"
+          className="kicker ml-auto hidden border border-ink-300 px-4 py-2.5 text-ink-600 transition hover:border-ink-900 hover:text-ink-900 lg:block"
+        >
+          Sign in
+        </Link>
 
         <button
           type="button"

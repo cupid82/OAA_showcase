@@ -2,22 +2,45 @@
  * All landing-page copy lives here — placeholder content standing in for the real
  * details in docs/01-landing-page.md. Swap the values, not the components.
  *
- * TODO: replace the college name, contact details, departments, courses and
- * placement numbers with the real ones before this goes anywhere public.
+ * TODO: "Avelin" is a made-up placeholder name, not the college's. Replace it
+ * along with the contact details, departments, courses and placement numbers
+ * before this goes anywhere public.
  */
 
 export const COLLEGE = {
-  name: 'Sunrise Institute of Technology',
-  short: 'SIT',
+  name: 'Avelin Institute of Technology',
+  short: 'Avelin',
   tagline: 'Learn. Adapt. Excel.',
   established: 1998,
   intro:
-    'An autonomous engineering institute where academic results are only half the story — every student is measured on ability, not marks alone.',
+    'Marks measure recall. This measures ability — academics, adaptability, physical wellbeing and social contribution, kept for every student, visible to every student.',
   address: '17 Vidya Marg, Whitefield, Bengaluru 560066, Karnataka',
   phone: '+91 80 4567 8900',
   email: 'admissions@sunrisetech.edu.in',
   accreditations: ['NAAC A+ Accredited', 'AICTE Approved', 'NBA Accredited Programmes'],
 };
+
+/** The three portal entry points, in the order they appear on the landing page. */
+export const ROLE_ENTRIES = [
+  {
+    role: 'student',
+    label: 'Student',
+    icon: 'cap',
+    blurb: 'Your marks, attendance, ability score and everything happening on campus.',
+  },
+  {
+    role: 'teacher',
+    label: 'Teacher',
+    icon: 'users',
+    blurb: 'Take attendance, enter marks and record the assessments only you can see.',
+  },
+  {
+    role: 'admin',
+    label: 'Administrator',
+    icon: 'settings',
+    blurb: 'Accounts, departments, results and the settings the whole institute runs on.',
+  },
+] as const;
 
 export const NAV_LINKS = [
   { label: 'About', href: '#about' },

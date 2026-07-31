@@ -10,7 +10,7 @@ export function Gallery() {
       eyebrow="Campus"
       title="Around the campus"
       description="Forty-two acres of labs, libraries, hostels and open ground."
-      className="bg-ink-50"
+      className="bg-sage-50"
     >
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {GALLERY.map((caption) => (

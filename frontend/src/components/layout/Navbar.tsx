@@ -35,40 +35,35 @@ export function Navbar({ onToggleSidebar, sidebarOpen }: NavbarProps) {
           onClick={onToggleSidebar}
           aria-expanded={sidebarOpen}
           aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'}
-          className="rounded-lg p-2 text-ink-600 transition hover:bg-ink-100 lg:hidden"
+          className="p-2 text-ink-600 transition hover:text-ink-900 lg:hidden"
         >
           <Icon name={sidebarOpen ? 'close' : 'menu'} />
         </button>
 
-        <Link
-          to={user ? HOME_BY_ROLE[user.role] : '/'}
-          className="flex items-center gap-2 font-semibold text-ink-900"
-        >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <Icon name="cap" className="size-5" />
-          </span>
-          <span className="hidden sm:inline">OAA Portal</span>
+        <Link to={user ? HOME_BY_ROLE[user.role] : '/'} className="flex items-baseline gap-2.5">
+          <span className="font-serif text-xl text-ink-900">Avelin</span>
+          <span className="kicker hidden text-ink-400 sm:inline">Portal</span>
         </Link>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-4">
           {user && (
             <>
               <div className="hidden text-right sm:block">
-                <p className="text-sm leading-tight font-medium text-ink-900">{user.name}</p>
-                <p className="text-xs text-ink-500">
+                <p className="text-sm leading-tight text-ink-900">{user.name}</p>
+                <p className="kicker mt-1 text-ink-500">
                   {ROLE_LABEL[user.role]} · {user.loginId}
                 </p>
               </div>
               <span
                 aria-hidden="true"
-                className="flex size-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700"
+                className="kicker flex size-9 items-center justify-center border border-ink-300 text-ink-600"
               >
                 {initialsOf(user.name)}
               </span>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 rounded-lg border border-ink-200 px-3 py-2 text-sm font-medium text-ink-700 transition hover:bg-ink-100"
+                className="kicker flex items-center gap-2 border border-ink-300 px-3 py-2.5 text-ink-600 transition hover:border-ink-900 hover:text-ink-900"
               >
                 <Icon name="logout" className="size-4" />
                 <span className="hidden sm:inline">Log out</span>

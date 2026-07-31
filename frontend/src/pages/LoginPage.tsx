@@ -7,6 +7,7 @@ import { HOME_BY_ROLE, useAuth } from '@/context/AuthContext';
 import { DEMO_ACCOUNTS } from '@/lib/mockAuth';
 import { cn } from '@/lib/cn';
 import { ROLE_LABEL } from '@/lib/nav';
+import { COLLEGE } from '@/pages/landing/landingData';
 import { ROLES } from '@/types';
 import type { Role } from '@/types';
 
@@ -19,6 +20,9 @@ const ID_LABEL: Record<Role, string> = {
   teacher: 'Staff ID',
   admin: 'Admin ID',
 };
+
+const FIELD =
+  'w-full border-b border-ink-300 bg-transparent py-2.5 text-ink-900 transition placeholder:text-ink-400 focus:border-brand-600';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -64,24 +68,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink-50">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-12">
-        <Link to="/" className="mb-8 flex items-center gap-2 self-center text-ink-900">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-brand-600 text-white">
-            <Icon name="cap" />
-          </span>
-          <span className="text-lg font-semibold">OAA Portal</span>
+    <div className="relative isolate flex min-h-screen flex-col bg-ink-50">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-20 bg-linear-to-b from-brand-50 via-ink-50 to-ink-50"
+      />
+      <div
+        aria-hidden="true"
+        className="lattice-ink absolute inset-0 -z-10 opacity-[0.18] [mask-image:radial-gradient(70%_50%_at_50%_0%,black,transparent_70%)]"
+      />
+
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-14">
+        <Link to="/" className="flex items-baseline gap-2.5 self-center">
+          <span className="font-serif text-2xl text-ink-900">{COLLEGE.short}</span>
+          <span className="kicker text-ink-400">Portal</span>
         </Link>
 
-        <div className="rounded-2xl border border-ink-200 bg-white p-6 shadow-card sm:p-8">
-          <h1 className="text-xl font-semibold text-ink-900">Sign in</h1>
-          <p className="mt-1 text-sm text-ink-500">Choose your role and enter your credentials.</p>
+        <div className="mt-10 border-t border-ink-300 pt-8">
+          <h1 className="font-serif text-3xl text-ink-900">Sign in</h1>
+          <p className="mt-2 text-ink-600">Choose your role, then enter your credentials.</p>
 
-          <div
-            role="tablist"
-            aria-label="Login role"
-            className="mt-5 flex gap-1 rounded-xl bg-ink-100 p-1"
-          >
+          <div role="tablist" aria-label="Login role" className="mt-8 grid grid-cols-3">
             {ROLES.map((option) => (
               <button
                 key={option}
@@ -90,10 +97,10 @@ export default function LoginPage() {
                 aria-selected={role === option}
                 onClick={() => switchRole(option)}
                 className={cn(
-                  'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition',
+                  'kicker border-b-2 pb-3 transition',
                   role === option
-                    ? 'bg-white text-brand-700 shadow-sm'
-                    : 'text-ink-600 hover:text-ink-900',
+                    ? 'border-brand-600 text-ink-900'
+                    : 'border-ink-300 text-ink-500 hover:text-ink-800',
                 )}
               >
                 {ROLE_LABEL[option] === 'Administrator' ? 'Admin' : ROLE_LABEL[option]}
@@ -102,84 +109,87 @@ export default function LoginPage() {
           </div>
 
           {expired && (
-            <p className="mt-4 rounded-lg bg-accent-400/15 px-3 py-2 text-sm text-accent-600">
+            <p className="mt-6 border-l-2 border-accent-500 bg-accent-400/10 px-4 py-3 text-sm text-ink-700">
               Your session expired. Please sign in again.
             </p>
           )}
 
-          <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="loginId" className="mb-1.5 block text-sm font-medium text-ink-700">
-                {ID_LABEL[role]}
-              </label>
-              <input
-                id="loginId"
-                name="loginId"
-                value={loginId}
-                onChange={(event) => setLoginId(event.target.value)}
-                autoComplete="username"
-                required
-                className="w-full rounded-lg border border-ink-300 px-3 py-2.5 text-sm text-ink-900 placeholder:text-ink-400"
-                placeholder={DEMO_ACCOUNTS[role].user.loginId}
-              />
-            </div>
+          <form className="mt-8" onSubmit={handleSubmit}>
+            <label htmlFor="loginId" className="kicker block text-ink-500">
+              {ID_LABEL[role]}
+            </label>
+            <input
+              id="loginId"
+              name="loginId"
+              value={loginId}
+              onChange={(event) => setLoginId(event.target.value)}
+              autoComplete="username"
+              required
+              className={FIELD}
+              placeholder={DEMO_ACCOUNTS[role].user.loginId}
+            />
 
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-ink-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                required
-                className="w-full rounded-lg border border-ink-300 px-3 py-2.5 text-sm text-ink-900 placeholder:text-ink-400"
-                placeholder="••••••••"
-              />
-            </div>
+            <label htmlFor="password" className="kicker mt-7 block text-ink-500">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+              className={FIELD}
+              placeholder="••••••••"
+            />
 
-            {error && <ErrorMessage title="Sign-in failed" message={error} />}
+            {error && (
+              <div className="mt-6">
+                <ErrorMessage title="Sign-in failed" message={error} />
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+              className="kicker mt-9 flex w-full items-center justify-center gap-3 border border-brand-600 bg-brand-600 px-6 py-3.5 text-white transition hover:border-brand-500 hover:bg-brand-500 disabled:opacity-60"
             >
-              {submitting ? 'Signing in…' : `Sign in as ${ROLE_LABEL[role].toLowerCase()}`}
+              {submitting ? 'Signing in…' : `Continue as ${ROLE_LABEL[role].toLowerCase()}`}
+              {!submitting && <Icon name="arrowRight" className="size-4" />}
             </button>
           </form>
 
           {/* Remove this block when the real auth API lands (Step 2). */}
-          <div className="mt-5 rounded-lg border border-dashed border-ink-300 bg-ink-50 p-3 text-xs text-ink-600">
-            <p className="font-semibold text-ink-700">Demo account (mock auth, no backend yet)</p>
-            <p className="mt-1 font-mono">
-              {DEMO_ACCOUNTS[role].user.loginId} / {DEMO_ACCOUNTS[role].password}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setLoginId(DEMO_ACCOUNTS[role].user.loginId);
-                setPassword(DEMO_ACCOUNTS[role].password);
-              }}
-              className="mt-2 font-medium text-brand-700 underline underline-offset-2"
-            >
-              Fill it in
-            </button>
+          <div className="mt-8 border-t border-ink-300 pt-5">
+            <p className="kicker text-ink-500">Demo account · mock auth, no backend yet</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="font-mono text-sm text-ink-700">
+                {DEMO_ACCOUNTS[role].user.loginId} / {DEMO_ACCOUNTS[role].password}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginId(DEMO_ACCOUNTS[role].user.loginId);
+                  setPassword(DEMO_ACCOUNTS[role].password);
+                }}
+                className="kicker text-brand-700 underline underline-offset-4 hover:text-brand-600"
+              >
+                Fill it in
+              </button>
+            </div>
           </div>
 
-          <p className="mt-5 text-center text-xs text-ink-500">
+          <p className="mt-8 text-sm text-ink-500">
             Accounts are created by the college administrator. There is no public sign-up.
           </p>
         </div>
 
         <Link
           to="/"
-          className="mt-6 self-center text-sm font-medium text-ink-500 transition hover:text-ink-800"
+          className="kicker mt-10 self-center text-ink-500 transition hover:text-ink-900"
         >
-          ← Back to the college website
+          ← Back to the website
         </Link>
       </div>
     </div>

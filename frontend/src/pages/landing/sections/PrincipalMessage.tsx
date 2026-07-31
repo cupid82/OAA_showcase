@@ -3,7 +3,7 @@ import { PRINCIPAL } from '@/pages/landing/landingData';
 
 export function PrincipalMessage() {
   return (
-    <section id="principal" className="relative isolate overflow-hidden bg-ink-950 text-white">
+    <section id="principal" className="relative isolate overflow-hidden bg-brand-900 text-white">
       <div aria-hidden="true" className="drafting absolute inset-0 -z-10 opacity-70" />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
