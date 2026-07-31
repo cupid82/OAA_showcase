@@ -881,11 +881,11 @@ git add -A && git commit -m "step 15: security hardening and production deploy"
 
 | # | Step | Plan mode | Est. | Status |
 |---|---|---|---|---|
-| 0 | Foundation — git, CLAUDE.md, docs, env, cleanup | — | 30 min | ⬜ |
-| 1 | Database layer & schema | 🧠 required | 2–3 h | ⬜ |
-| 2 | Auth & RBAC | 🧠 required | 2–3 h | ⬜ |
-| 3 | Frontend shell | — | 2 h | ⬜ |
-| 4 | Landing page | — | 2–3 h | ⬜ |
+| 0 | Foundation — git, CLAUDE.md, docs, env, cleanup | — | 30 min | ✅ |
+| 1 | Database layer & schema | 🧠 required | 2–3 h | ⏸ deferred |
+| 2 | Auth & RBAC | 🧠 required | 2–3 h | ⏸ deferred |
+| 3 | Frontend shell | — | 2 h | ✅ (mock auth) |
+| 4 | Landing page | — | 2–3 h | ✅ |
 | 5 | **Student read-only slice** ⭐ | 🧠 required | 3–4 h | ⬜ |
 | 6 | Teacher write path | — | 3–4 h | ⬜ |
 | 7 | **OAA engine** ⭐ | 🧠 required | 4–5 h | ⬜ |
