@@ -901,18 +901,26 @@ git add -A && git commit -m "step 15: security hardening and production deploy"
 | 3   | Frontend shell                                  | —              | 2 h    | ✅                            |
 | 4   | Landing page                                    | —              | 2–3 h  | ✅                            |
 | 5   | **Student read-only slice** ⭐                  | 🧠 required    | 3–4 h  | ✅                            |
-| 6   | Teacher write path                              | —              | 3–4 h  | ⬜                            |
-| 7   | **OAA engine** ⭐                               | 🧠 required    | 4–5 h  | ⬜                            |
-| 8   | OAA dashboard (radar chart)                     | —              | 2–3 h  | ⬜                            |
+| 6   | Teacher write path                              | —              | 3–4 h  | ✅                            |
+| 7   | **OAA engine** ⭐                               | 🧠 required    | 4–5 h  | ✅                            |
+| 8   | OAA dashboard (radar chart)                     | —              | 2–3 h  | ✅                            |
 | 9   | Admin console                                   | 🧠 recommended | 4–5 h  | ⬜                            |
-| 10  | Leaderboards & analytics                        | —              | 3–4 h  | ⬜                            |
-| 11  | Events module                                   | —              | 2 h    | ⬜                            |
-| 12  | Announcements module                            | —              | 1–2 h  | ⬜                            |
-| 13  | Assignments module                              | —              | 2–3 h  | ⬜                            |
-| 14  | Timetable module                                | —              | 1–2 h  | ⬜                            |
+| 10  | Leaderboards & analytics                        | —              | 3–4 h  | 🔄 student half               |
+| 11  | Events module                                   | —              | 2 h    | 🔄 student half               |
+| 12  | Announcements module                            | —              | 1–2 h  | 🔄 student half               |
+| 13  | Assignments module                              | —              | 2–3 h  | 🔄 student half               |
+| 14  | Timetable module                                | —              | 1–2 h  | 🔄 student half               |
 | 15  | Harden & deploy                                 | —              | 3–4 h  | ⬜                            |
 
 Rough estimates for solo part-time work — treat them as _relative_ sizing, not deadlines.
+
+> [!note] Steps 10–14 are half-built
+> The **student-facing read side** of all five is live — leaderboard, timetable,
+> announcements, events and assignments, each seeded and served by a real
+> endpoint. What is missing is the **staff write side**: admin analytics and
+> report export (10), creating events (11) and announcements (12), setting and
+> grading assignments (13), and editing the timetable (14). Each is the admin or
+> teacher half of a module whose data model and read path already exist.
 
 > [!note] Step 1 was answered differently
 > This project persists to a JSON document (`backend/data/oaa-data.json`) rather

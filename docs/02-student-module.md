@@ -81,8 +81,16 @@ bar chart (Recharts), and the most recent absences.
 
 ## OAA — `/student/oaa`
 
-See `07-oaa-spec.md`. Still blocked on the grade table and the seven adaptability
-sub-criteria — those cannot be invented. Step 7/8.
+**Built.** `GET /api/students/me/oaa`. Score gauge, the four-dimension radar with
+the class average as a context series, semester trend, strongest/weakest cards
+with advice, and the records that fed each dimension.
+
+The grade table and the seven adaptability sub-criteria were **invented** during
+the build rather than taken from college regulations — see the warning at the top
+of `07-oaa-spec.md`. They are placeholders standing in for real values.
+
+A dimension with no records is dropped from both the score and the radar rather
+than plotted as a zero, and the page says so.
 
 ## Events — `/student/events`
 

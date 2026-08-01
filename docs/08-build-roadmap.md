@@ -42,5 +42,14 @@ These override `05-database-design.md` wherever they disagree:
 
 ## Current status
 
-Steps 0, 3, 4 done. Steps 1 (database) and 2 (auth) deferred by the owner —
-frontend auth currently runs on a mock provider. See `CLAUDE.md` → Current state.
+Steps 0, 2, 3, 4, 5 and 6 done. Step 1 was answered differently: the project
+persists to a JSON document rather than Postgres, so the schema work lives in
+`backend/src/data/types.ts` and `store.ts` is the seam a real database would
+replace. Auth is real — the mock provider is gone. Step 7 (the OAA engine) is
+next. See `CLAUDE.md` → Current state.
+
+Phase 1's corrections above are implemented as far as the built modules need
+them: dated attendance rows (1), no stored aggregates (2), the OAA input tables
+(4) still to come with Step 7, `audit_logs` (5) and one `users` table (6) exist.
+Departments, subjects and semesters (3) are subject rows plus string fields, not
+separate tables — revisit if the admin console needs to manage them as entities.
