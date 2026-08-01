@@ -8,14 +8,7 @@
  */
 import { hash as bcryptHash } from 'bcryptjs';
 
-import type {
-  AttendanceRow,
-  Database,
-  MarkRow,
-  StudentRow,
-  SubjectRow,
-  UserRow,
-} from './types.js';
+import type { AttendanceRow, Database, MarkRow, StudentRow, SubjectRow, UserRow } from './types.js';
 
 const BCRYPT_COST = 10;
 
