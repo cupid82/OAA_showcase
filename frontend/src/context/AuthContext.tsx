@@ -1,9 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { tokenStore } from '@/lib/api';
-import { mockLogin, mockMe } from '@/lib/mockAuth';
-import type { Role, User } from '@/types';
+import { api, tokenStore } from '@/lib/api';
+import type { AuthSession, Role, User } from '@/types';
 
 const USER_KEY = 'oaa.user';
 
@@ -29,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
 
-  // Restore the session on refresh.
+  // Restore the session on refresh. The cached user only paints the first frame —
+  // the server's answer is authoritative and overwrites it.
   useEffect(() => {
     const token = tokenStore.get();
     if (!token) {
@@ -39,11 +39,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
 
-    // SWAP FOR THE REAL API (Step 2): api.get<{ data: User }>('/api/auth/me')
-    mockMe(token)
-      .then((restored) => {
+    api
+      .get<{ data: User }>('/api/auth/me')
+      .then(({ data }) => {
         if (cancelled) return;
-        setUser(restored);
+        localStorage.setItem(USER_KEY, JSON.stringify(data));
+        setUser(data);
         setStatus('authenticated');
       })
       .catch(() => {
@@ -60,21 +61,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (loginId: string, password: string, role: Role) => {
-    // SWAP FOR THE REAL API (Step 2):
-    // api.post<{ data: AuthSession }>('/api/auth/login', { userId, password, role },
-    //   { skipAuthRedirect: true })
-    const session = await mockLogin(loginId, password, role);
+    // skipAuthRedirect: a 401 here means "wrong password", not "session expired" —
+    // without it the login page would redirect to itself.
+    const { data } = await api.post<{ data: AuthSession }>(
+      '/api/auth/login',
+      { loginId, password, role },
+      { skipAuthRedirect: true },
+    );
 
-    tokenStore.set(session.token);
-    localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-    setUser(session.user);
+    tokenStore.set(data.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    setUser(data.user);
     setStatus('authenticated');
 
-    return session.user;
+    return data.user;
   }, []);
 
   const logout = useCallback(() => {
-    // Step 2 adds: api.post('/api/auth/logout', {}) — fire and forget.
+    // Tokens are stateless — dropping it client-side is the whole logout.
     tokenStore.clear();
     localStorage.removeItem(USER_KEY);
     setUser(null);

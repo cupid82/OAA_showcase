@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Icon } from '@/components/ui/Icon';
 import { HOME_BY_ROLE, useAuth } from '@/context/AuthContext';
-import { DEMO_ACCOUNTS } from '@/lib/mockAuth';
+import { DEMO_LOGINS, OTHER_STUDENT_LOGINS } from '@/lib/demoAccounts';
 import { cn } from '@/lib/cn';
 import { ROLE_LABEL } from '@/lib/nav';
 import { COLLEGE } from '@/pages/landing/landingData';
@@ -126,7 +126,7 @@ export default function LoginPage() {
               autoComplete="username"
               required
               className={FIELD}
-              placeholder={DEMO_ACCOUNTS[role].user.loginId}
+              placeholder={DEMO_LOGINS[role].loginId}
             />
 
             <label htmlFor="password" className="kicker mt-7 block text-ink-500">
@@ -160,24 +160,30 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Remove this block when the real auth API lands (Step 2). */}
+          {/* Seeded accounts. Remove this block before real accounts are issued. */}
           <div className="mt-8 border-t border-ink-300 pt-5">
-            <p className="kicker text-ink-500">Demo account · mock auth, no backend yet</p>
+            <p className="kicker text-ink-500">Seeded account</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <p className="font-mono text-sm text-ink-700">
-                {DEMO_ACCOUNTS[role].user.loginId} / {DEMO_ACCOUNTS[role].password}
+                {DEMO_LOGINS[role].loginId} / {DEMO_LOGINS[role].password}
               </p>
               <button
                 type="button"
                 onClick={() => {
-                  setLoginId(DEMO_ACCOUNTS[role].user.loginId);
-                  setPassword(DEMO_ACCOUNTS[role].password);
+                  setLoginId(DEMO_LOGINS[role].loginId);
+                  setPassword(DEMO_LOGINS[role].password);
                 }}
                 className="kicker text-brand-700 underline underline-offset-4 hover:text-brand-600"
               >
                 Fill it in
               </button>
             </div>
+            {role === 'student' && (
+              <p className="mt-3 text-xs text-ink-500">
+                {OTHER_STUDENT_LOGINS.join(' and ')} use the same password and have different
+                records — {OTHER_STUDENT_LOGINS[0]} is below the 75% attendance threshold.
+              </p>
+            )}
           </div>
 
           <p className="mt-8 text-sm text-ink-500">

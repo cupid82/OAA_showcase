@@ -22,21 +22,18 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
       label: 'Profile',
       to: '/student/profile',
       icon: 'user',
-      step: 5,
       blurb: 'Personal and academic details',
     },
     {
       label: 'Marks',
       to: '/student/marks',
       icon: 'book',
-      step: 5,
       blurb: 'Subject-wise internal and external marks',
     },
     {
       label: 'Attendance',
       to: '/student/attendance',
       icon: 'calendar',
-      step: 5,
       blurb: 'Overall percentage and subject breakdown',
     },
     {

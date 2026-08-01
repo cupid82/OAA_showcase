@@ -11,27 +11,28 @@ Full specs in `docs/`. The build order is in `plans.md`.
 - Monorepo: npm workspaces (`frontend/`, `backend/`)
 - Backend: Express 4 + TypeScript, **ESM** — relative imports MUST end in `.js`
 - Frontend: React 18 + Vite 6 + TypeScript + Tailwind + React Router
-- Database: PostgreSQL via Prisma
+- Persistence: **a JSON file, not a database.** Owner's decision — do not add
+  Postgres, Prisma, SQLite or any other DB without asking.
 - Auth: JWT + bcrypt + role-based access control
 - Charts: Recharts
 - Validation: zod (already a dependency — use it, don't add another)
 
 ## Current state — read before planning anything
 
-Steps 0, 3 and 4 of `plans.md` are done. Steps 1 (database) and 2 (auth API) are
-**deliberately deferred** — the owner will do them later.
+Steps 0, 3, 4 and 5 of `plans.md` are done. Step 1 was replaced by the JSON store
+below; Step 2 (auth API) is built.
 
-That means, right now:
-
-- There is **no database and no Prisma**. Nothing persists.
-- There is **no `/api/auth/*` backend**. The only backend route is `/api/health`.
-- The frontend auth flow runs on a **mock provider** at
-  `frontend/src/lib/mockAuth.ts` — three demo accounts, resolved locally.
-  `frontend/src/context/AuthContext.tsx` is the single seam: when the real
-  endpoints exist, swap the two calls inside it for `api.post('/api/auth/login')`
-  and `api.get('/api/auth/me')` and delete `mockAuth.ts`. Nothing else changes.
-- Do **not** spread mock data anywhere else. Feature pages that need real data
-  wait for their backend step.
+- **Persistence is `backend/data/oaa-data.json`** — gitignored, seeded on first
+  run, loaded by `backend/src/data/store.ts`. Delete the file to reseed.
+  `store.ts` is the single seam: swapping in a real database touches that file
+  and the service queries, nothing above them.
+- **Auth is real.** `POST /api/auth/login` and `GET /api/auth/me`, bcrypt cost 10,
+  JWT in `localStorage`. `mockAuth.ts` is gone; do not reintroduce it.
+- **Live student pages:** `/student/profile`, `/student/marks`,
+  `/student/attendance`, all reading `GET /api/students/me[/marks|/attendance]`.
+- Everything else is routed but unbuilt and renders `ComingSoon`.
+- Do **not** spread mock data anywhere. A feature page that needs data it cannot
+  get yet stays empty until its backend step.
 
 ## Existing patterns — REUSE, never reinvent
 
@@ -41,14 +42,20 @@ That means, right now:
   add try/catch in routes for validation.
 - `backend/src/config/env.ts` — all env vars go through this zod schema. Never read
   `process.env` directly anywhere else.
+- `backend/src/middleware/requireAuth.ts` — `requireAuth`, `requireRole`,
+  `requireSelfOrStaff`. Guard every new protected route with these; never
+  hand-roll an ownership check in a handler.
+- `backend/src/lib/grading.ts` — grade bands, grade points, credit-weighted means
 - `frontend/src/lib/api.ts` — the only place `fetch` is called
-- Route file → service file → database. Routes never query the DB directly.
+- `frontend/src/lib/useApi.ts` — the loading / error / data hook every page uses
+- Route file → service file → store. Routes never touch `getDb()` directly.
 
 ## Non-negotiable rules
 
 1. **ESM imports need `.js`**: `import { x } from './foo.js'` even though the file is `foo.ts`.
 2. **Never store a plaintext password.** bcrypt, cost 10+.
-3. **Never build SQL by string concatenation.** Prisma or parameterized queries only.
+3. **Never build SQL by string concatenation.** If a real database is ever added,
+   it is Prisma or parameterized queries only.
 4. **Every protected route checks role AND ownership.** A student requesting
    `/api/students/42/marks` must be verified as student 42, not just "a student".
 5. **Validate every request body with a zod schema** in the model file.

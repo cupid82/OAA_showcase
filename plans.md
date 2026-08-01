@@ -30,34 +30,34 @@ Read this part once. It is the ground truth of your repo as it exists today.
 
 ## ✅ What is already set up
 
-| Layer | What's there |
-|---|---|
-| **Structure** | npm workspaces monorepo — `frontend/` + `backend/` |
-| **Backend** | Express 4 + TypeScript, **ESM** (`"type": "module"`) |
-| **Backend libs** | `zod`, `helmet`, `cors`, `morgan`, `dotenv` |
+| Layer                | What's there                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Structure**        | npm workspaces monorepo — `frontend/` + `backend/`                                                           |
+| **Backend**          | Express 4 + TypeScript, **ESM** (`"type": "module"`)                                                         |
+| **Backend libs**     | `zod`, `helmet`, `cors`, `morgan`, `dotenv`                                                                  |
 | **Backend patterns** | `createApp()`, `asyncHandler`, `HttpError`, `errorHandler`, `notFound`, zod-validated env, graceful shutdown |
-| **Frontend** | React 18 + Vite 6 + TypeScript |
-| **Frontend setup** | `@` → `src` path alias, dev proxy `/api` → `:4000`, `api` fetch wrapper |
-| **Database** | Postgres 16 in `docker-compose.yml` (user/pass/db all `oaa`) |
-| **CI** | GitHub Actions — format check, typecheck, build, test |
-| **Tooling** | Prettier, editorconfig, Dockerfiles, `.gitignore`, `.env.example` |
+| **Frontend**         | React 18 + Vite 6 + TypeScript                                                                               |
+| **Frontend setup**   | `@` → `src` path alias, dev proxy `/api` → `:4000`, `api` fetch wrapper                                      |
+| **Database**         | Postgres 16 in `docker-compose.yml` (user/pass/db all `oaa`)                                                 |
+| **CI**               | GitHub Actions — format check, typecheck, build, test                                                        |
+| **Tooling**          | Prettier, editorconfig, Dockerfiles, `.gitignore`, `.env.example`                                            |
 
 > [!success] This is a genuinely good scaffold
 > The error handling, env validation, and `asyncHandler` patterns are the parts people usually get wrong. Build on them — don't let Claude reinvent them.
 
 ## ❌ What is missing — and you need all of it
 
-| Gap | Impact | Fixed in |
-|---|---|---|
-| **No git repository** | `git status` → *"not a git repository"* | Step 0.1 |
-| **No `docs/` folder** | Steps 1, 4, 5, 6, 7, 9, 11 all reference `@docs/*.md` — they will not work without it | Step 0.3 |
-| **No `.env` file** | Only `.env.example` exists. Nothing loads real config yet | Step 0.4 |
-| **No database library** | Postgres is in Docker, but nothing connects to it. `itemService.ts` is an in-memory `Map` | Step 1 |
-| **No auth libraries** | No `bcrypt`, no `jsonwebtoken`, no `express-rate-limit` | Step 2 |
-| **No React Router** | Can't build multi-page anything yet | Step 3 |
-| **No Tailwind** | Plain `global.css` right now | Step 3 |
-| **No charts** | No `recharts` — needed for the OAA radar chart | Step 3 |
-| **No tests** | Test runner is configured, zero test files exist | Step 2 onward |
+| Gap                     | Impact                                                                                    | Fixed in      |
+| ----------------------- | ----------------------------------------------------------------------------------------- | ------------- |
+| **No git repository**   | `git status` → _"not a git repository"_                                                   | Step 0.1      |
+| **No `docs/` folder**   | Steps 1, 4, 5, 6, 7, 9, 11 all reference `@docs/*.md` — they will not work without it     | Step 0.3      |
+| **No `.env` file**      | Only `.env.example` exists. Nothing loads real config yet                                 | Step 0.4      |
+| **No database library** | Postgres is in Docker, but nothing connects to it. `itemService.ts` is an in-memory `Map` | Step 1        |
+| **No auth libraries**   | No `bcrypt`, no `jsonwebtoken`, no `express-rate-limit`                                   | Step 2        |
+| **No React Router**     | Can't build multi-page anything yet                                                       | Step 3        |
+| **No Tailwind**         | Plain `global.css` right now                                                              | Step 3        |
+| **No charts**           | No `recharts` — needed for the OAA radar chart                                            | Step 3        |
+| **No tests**            | Test runner is configured, zero test files exist                                          | Step 2 onward |
 
 ## 🗑️ Demo code that must be deleted
 
@@ -87,7 +87,7 @@ Start a fresh session (`/clear`) for each numbered step. A session that's built 
 
 ### Habit 2 — Use plan mode for anything big
 
-Press `Shift+Tab` twice to enter **plan mode**. Claude explores and proposes an approach without editing files. Read the plan, correct it, *then* approve.
+Press `Shift+Tab` twice to enter **plan mode**. Claude explores and proposes an approach without editing files. Read the plan, correct it, _then_ approve.
 
 **Use plan mode for Steps 1, 2, 5, 7, and 9 especially.** Each step below tells you when it's required.
 
@@ -112,7 +112,7 @@ This is your undo button. If a step goes wrong, `git reset --hard` costs you one
 Your Obsidian notes are the requirements. Claude builds much better with the real spec than a paraphrase.
 
 > [!tip] Best move: copy your specs into the repo
-> That's exactly what Step 0.3 does. Then you can just say *"follow @docs/02-student-module.md"* and Claude reads it directly.
+> That's exactly what Step 0.3 does. Then you can just say _"follow @docs/02-student-module.md"_ and Claude reads it directly.
 
 ---
 
@@ -157,15 +157,17 @@ This file is auto-loaded into every Claude session in this repo. It's the single
 
 **Save this exactly as `D:\OAA\CLAUDE.md`:**
 
-````markdown
+```markdown
 # CLAUDE.md — Smart Student Management Portal (OAA)
 
 ## What this is
+
 College portal with three roles: Student, Teacher, Admin.
 The signature feature is the **OAA score** (Overall Ability Assessment).
 Full specs in `docs/`.
 
 ## Stack — decided, do not change without asking
+
 - Monorepo: npm workspaces (`frontend/`, `backend/`)
 - Backend: Express 4 + TypeScript, **ESM** — relative imports MUST end in `.js`
 - Frontend: React 18 + Vite 6 + TypeScript + Tailwind + React Router
@@ -175,6 +177,7 @@ Full specs in `docs/`.
 - Validation: zod (already a dependency — use it, don't add another)
 
 ## Existing patterns — REUSE, never reinvent
+
 - `backend/src/lib/asyncHandler.ts` — wrap every async route handler
 - `backend/src/lib/httpError.ts` — throw `HttpError.notFound()`, `.forbidden()`, etc.
 - `backend/src/middleware/errorHandler.ts` — already converts ZodError → 400. Do not
@@ -185,6 +188,7 @@ Full specs in `docs/`.
 - Route file → service file → database. Routes never query the DB directly.
 
 ## Non-negotiable rules
+
 1. **ESM imports need `.js`**: `import { x } from './foo.js'` even though the file is `foo.ts`.
 2. **Never store a plaintext password.** bcrypt, cost 10+.
 3. **Never build SQL by string concatenation.** Prisma or parameterized queries only.
@@ -195,6 +199,7 @@ Full specs in `docs/`.
 7. **API responses are always** `{ data: ... }` **or** `{ error: { message } }`.
 
 ## Domain rules
+
 - OAA = (Academic + Adaptability + Physical + 0.5 × Social) / 3.5 → range 0–100
 - Round to nearest integer BEFORE grade lookup (95.4 → 95 → A; 95.6 → 96 → A+)
 - Attendance is one row per student, per subject, per DATE. Never a running counter.
@@ -202,17 +207,19 @@ Full specs in `docs/`.
 - Teacher-assigned scores (Adaptability, Social) must write an `audit_logs` row.
 
 ## Commands
+
 - `npm run dev` — both servers
 - `npm run typecheck` — must pass before any commit
 - `npm test` — backend tests
 - `npm run format` — prettier
 
 ## Before you finish any task
+
 Run `npm run typecheck`. If it fails, fix it — don't hand back broken code.
-````
+```
 
 > [!check] Verify 0.2
-> Open a new Claude session in `D:\OAA` and ask *"what stack are we using?"* — it should answer from CLAUDE.md without exploring the repo.
+> Open a new Claude session in `D:\OAA` and ask _"what stack are we using?"_ — it should answer from CLAUDE.md without exploring the repo.
 
 ---
 
@@ -226,16 +233,16 @@ mkdir D:\OAA\docs
 
 Later steps reference these exact paths. Name your files to match, or edit the prompts to match your names:
 
-| File | Used by |
-|---|---|
-| `docs/01-landing-page.md` | Step 4 |
-| `docs/02-student-module.md` | Steps 5, 11 |
-| `docs/03-teacher-module.md` | Step 6 |
-| `docs/04-admin-module.md` | Steps 9, 11 |
-| `docs/05-database-design.md` | Step 1 |
-| `docs/06-security-technologies.md` | Step 15 |
-| `docs/07-oaa-spec.md` | Step 7 |
-| `docs/08-build-roadmap.md` | Steps 1, 9 |
+| File                               | Used by     |
+| ---------------------------------- | ----------- |
+| `docs/01-landing-page.md`          | Step 4      |
+| `docs/02-student-module.md`        | Steps 5, 11 |
+| `docs/03-teacher-module.md`        | Step 6      |
+| `docs/04-admin-module.md`          | Steps 9, 11 |
+| `docs/05-database-design.md`       | Step 1      |
+| `docs/06-security-technologies.md` | Step 15     |
+| `docs/07-oaa-spec.md`              | Step 7      |
+| `docs/08-build-roadmap.md`         | Steps 1, 9  |
 
 > [!danger] This step is a hard gate
 > If `docs/` is empty, Claude will invent requirements in Steps 1, 4, 5, 6, 7, 9 and 11 — and you will be rebuilding them later. Copy the notes before you continue.
@@ -300,9 +307,11 @@ Then run npm run typecheck and fix anything that breaks.
 ```
 
 > [!check] Verify Step 0
+>
 > ```bash
 > npm run typecheck && npm run dev
 > ```
+>
 > Both servers start. `http://localhost:5173` shows the placeholder. No console errors.
 > `http://localhost:4000/api/health` returns OK. `http://localhost:4000/api/items` now 404s.
 
@@ -365,11 +374,13 @@ Show me the schema for review BEFORE running the migration.
 > Leaderboards, ranking, and pagination all look fine with 3 rows and fall apart at 30. Find the bugs now.
 
 > [!check] Verify Step 1
+>
 > ```bash
 > docker compose up -d db
 > npx prisma migrate dev
 > npx prisma studio
 > ```
+>
 > Prisma Studio opens in the browser and you can see 30 students with marks and attendance rows. Attendance rows have real dates. The students table has **no** `oaa`, `cgpa`, or `attendance_percent` column.
 
 ```bash
@@ -418,12 +429,14 @@ Write tests (node --test) for:
 ```
 
 > [!danger] The bug that hits every project like this
-> Getting the *role* check right but forgetting the *ownership* check. Test it by hand: log in as one student, request another student's marks, confirm you get **403**. If you get data, stop and fix it before continuing.
+> Getting the _role_ check right but forgetting the _ownership_ check. Test it by hand: log in as one student, request another student's marks, confirm you get **403**. If you get data, stop and fix it before continuing.
 
 > [!check] Verify Step 2
+>
 > ```bash
 > npm test
 > ```
+>
 > All tests pass — **including** the student-A-can't-read-student-B test. Then manually: log in as a seeded student via curl/Postman, take the token, and request another student's ID. You must get 403.
 
 ```bash
@@ -584,6 +597,7 @@ Frontend:
 > Mark attendance for a class, then submit the exact same form again. You should get a clean 409 error, not duplicated rows. Without that unique constraint, every attendance percentage in the system silently goes wrong.
 
 > [!check] Verify Step 6
+>
 > 1. Mark a class present, submit twice → second submit returns **409**, no duplicate rows in Prisma Studio.
 > 2. Enter a mark above the subject max → rejected with a clear message.
 > 3. As teacher A, try to write marks for a subject assigned to teacher B → **403**.
@@ -816,7 +830,7 @@ Build the timetable module:
 git add -A && git commit -m "step N: <module> module"
 ```
 
-*(commit after each of 11, 12, 13, 14 separately)*
+_(commit after each of 11, 12, 13, 14 separately)_
 
 ---
 
@@ -862,15 +876,15 @@ git add -A && git commit -m "step 15: security hardening and production deploy"
 
 # 🧯 Part D — When Things Go Wrong
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `Cannot find module './foo'` | ESM needs file extensions | Import as `'./foo.js'` even for `.ts` files |
-| Env var is `undefined` | Read directly from `process.env` | Add it to the zod schema in `config/env.ts` |
-| CORS error in browser | Backend origin mismatch | Check `CORS_ORIGIN` matches the Vite port `5173` |
-| Prisma client out of date | Schema changed, client didn't | `npx prisma generate` |
-| Migration won't apply | Docker Postgres not running | `docker compose up -d db` |
-| Claude rewrites your patterns | Missing context | Point at `@CLAUDE.md`, be explicit about reusing existing helpers |
-| Claude's change broke something | It happens | `git reset --hard HEAD` — this is why you commit every step |
+| Symptom                         | Cause                            | Fix                                                               |
+| ------------------------------- | -------------------------------- | ----------------------------------------------------------------- |
+| `Cannot find module './foo'`    | ESM needs file extensions        | Import as `'./foo.js'` even for `.ts` files                       |
+| Env var is `undefined`          | Read directly from `process.env` | Add it to the zod schema in `config/env.ts`                       |
+| CORS error in browser           | Backend origin mismatch          | Check `CORS_ORIGIN` matches the Vite port `5173`                  |
+| Prisma client out of date       | Schema changed, client didn't    | `npx prisma generate`                                             |
+| Migration won't apply           | Docker Postgres not running      | `docker compose up -d db`                                         |
+| Claude rewrites your patterns   | Missing context                  | Point at `@CLAUDE.md`, be explicit about reusing existing helpers |
+| Claude's change broke something | It happens                       | `git reset --hard HEAD` — this is why you commit every step       |
 
 > [!tip] When a session goes sideways, restart it
 > Arguing with a confused session for 20 minutes is slower than `/clear` and one better-scoped prompt. Fresh context beats accumulated confusion.
@@ -879,26 +893,33 @@ git add -A && git commit -m "step 15: security hardening and production deploy"
 
 # ✅ Part E — Progress Tracker
 
-| # | Step | Plan mode | Est. | Status |
-|---|---|---|---|---|
-| 0 | Foundation — git, CLAUDE.md, docs, env, cleanup | — | 30 min | ✅ |
-| 1 | Database layer & schema | 🧠 required | 2–3 h | ⏸ deferred |
-| 2 | Auth & RBAC | 🧠 required | 2–3 h | ⏸ deferred |
-| 3 | Frontend shell | — | 2 h | ✅ (mock auth) |
-| 4 | Landing page | — | 2–3 h | ✅ |
-| 5 | **Student read-only slice** ⭐ | 🧠 required | 3–4 h | ⬜ |
-| 6 | Teacher write path | — | 3–4 h | ⬜ |
-| 7 | **OAA engine** ⭐ | 🧠 required | 4–5 h | ⬜ |
-| 8 | OAA dashboard (radar chart) | — | 2–3 h | ⬜ |
-| 9 | Admin console | 🧠 recommended | 4–5 h | ⬜ |
-| 10 | Leaderboards & analytics | — | 3–4 h | ⬜ |
-| 11 | Events module | — | 2 h | ⬜ |
-| 12 | Announcements module | — | 1–2 h | ⬜ |
-| 13 | Assignments module | — | 2–3 h | ⬜ |
-| 14 | Timetable module | — | 1–2 h | ⬜ |
-| 15 | Harden & deploy | — | 3–4 h | ⬜ |
+| #   | Step                                            | Plan mode      | Est.   | Status                        |
+| --- | ----------------------------------------------- | -------------- | ------ | ----------------------------- |
+| 0   | Foundation — git, CLAUDE.md, docs, env, cleanup | —              | 30 min | ✅                            |
+| 1   | Database layer & schema                         | 🧠 required    | 2–3 h  | 🔄 replaced by the JSON store |
+| 2   | Auth & RBAC                                     | 🧠 required    | 2–3 h  | ✅                            |
+| 3   | Frontend shell                                  | —              | 2 h    | ✅                            |
+| 4   | Landing page                                    | —              | 2–3 h  | ✅                            |
+| 5   | **Student read-only slice** ⭐                  | 🧠 required    | 3–4 h  | ✅                            |
+| 6   | Teacher write path                              | —              | 3–4 h  | ⬜                            |
+| 7   | **OAA engine** ⭐                               | 🧠 required    | 4–5 h  | ⬜                            |
+| 8   | OAA dashboard (radar chart)                     | —              | 2–3 h  | ⬜                            |
+| 9   | Admin console                                   | 🧠 recommended | 4–5 h  | ⬜                            |
+| 10  | Leaderboards & analytics                        | —              | 3–4 h  | ⬜                            |
+| 11  | Events module                                   | —              | 2 h    | ⬜                            |
+| 12  | Announcements module                            | —              | 1–2 h  | ⬜                            |
+| 13  | Assignments module                              | —              | 2–3 h  | ⬜                            |
+| 14  | Timetable module                                | —              | 1–2 h  | ⬜                            |
+| 15  | Harden & deploy                                 | —              | 3–4 h  | ⬜                            |
 
-Rough estimates for solo part-time work — treat them as *relative* sizing, not deadlines.
+Rough estimates for solo part-time work — treat them as _relative_ sizing, not deadlines.
+
+> [!note] Step 1 was answered differently
+> This project persists to a JSON document (`backend/data/oaa-data.json`) rather
+> than Postgres — the owner's call. Step 1's schema work lives in
+> `backend/src/data/types.ts`, and `backend/src/data/store.ts` is the seam a real
+> database would replace. Steps 6 onward still apply unchanged: they were written
+> against the route → service → data layering, which is intact.
 
 ---
 

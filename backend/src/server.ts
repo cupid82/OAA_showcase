@@ -1,5 +1,11 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
+import { initStore } from './data/store.js';
+
+// The store loads before the listener opens, so no request can observe a
+// half-loaded dataset. A failure here must stop the process, not serve empty data.
+const { seeded, file } = await initStore();
+console.log(`[backend] data store ${seeded ? 'seeded' : 'loaded'} — ${file}`);
 
 const app = createApp();
 

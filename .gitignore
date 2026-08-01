@@ -39,7 +39,9 @@ Thumbs.db
 .vite/
 .eslintcache
 
-# Local database files
+# Local data store — the seeded JSON document, not source.
+# Anchored to the backend root on purpose: a bare `data/` also matches
+# backend/src/data/, which is source code and must be committed.
+/backend/data/
 *.sqlite
 *.sqlite3
-data/

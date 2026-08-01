@@ -36,6 +36,7 @@ export default function DashboardPage() {
   if (!user) return null;
 
   const modules = NAV_BY_ROLE[user.role].filter((item) => item.to !== `/${user.role}`);
+  const liveCount = modules.filter((item) => item.step === undefined).length;
   const firstName = user.name.replace(/^(Dr|Prof|Mr|Ms|Mrs)\.?\s+/i, '').split(' ')[0];
 
   return (
@@ -48,11 +49,13 @@ export default function DashboardPage() {
       <div className="mb-10 flex items-start gap-3 border-l-2 border-accent-500 bg-accent-400/10 px-4 py-3.5">
         <Icon name="sparkle" className="mt-0.5 size-5 shrink-0 text-accent-600" />
         <div className="text-sm">
-          <p className="kicker text-ink-800">Shell only — no data yet</p>
+          <p className="kicker text-ink-800">
+            {liveCount > 0 ? `${liveCount} modules live` : 'Shell only — no data yet'}
+          </p>
           <p className="mt-1.5 text-ink-600">
-            Signed in as {ROLE_LABEL[user.role]} through the mock provider. The database and auth
-            API are Steps 1 and 2 of the build plan; every module below is routed and waiting for
-            its step.
+            Signed in as {ROLE_LABEL[user.role]} against the real API. Modules marked with a step
+            are routed and reachable but not built yet — they stay empty rather than showing
+            placeholder data.
           </p>
         </div>
       </div>
@@ -72,7 +75,11 @@ export default function DashboardPage() {
                 name={item.icon}
                 className="size-6 text-ink-400 transition group-hover:text-brand-600"
               />
-              {item.step && <span className="kicker text-ink-400">Step {item.step}</span>}
+              {item.step ? (
+                <span className="kicker text-ink-400">Step {item.step}</span>
+              ) : (
+                <span className="kicker text-brand-600">Live</span>
+              )}
             </div>
             <p className="mt-4 font-serif text-xl text-ink-900">{item.label}</p>
             <p className="mt-2 flex-1 text-sm text-ink-600">{item.blurb}</p>

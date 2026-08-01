@@ -4,7 +4,7 @@ Carry-forward notes from the W.1 build. Not a description of that project —
 the parts that transfer: the decisions that held up, the recipes worth copying,
 and the traps that cost real hours.
 
-`HANDBOOK.md` documents *this* project. This documents *how I build*.
+`HANDBOOK.md` documents _this_ project. This documents _how I build_.
 
 Every URL, key and ref below is a placeholder. Swap them; keep the structure.
 
@@ -12,13 +12,13 @@ Every URL, key and ref below is a placeholder. Swap them; keep the structure.
 
 # 1. Stack that worked
 
-| Layer | Choice | Why it stayed |
-|-------|--------|---------------|
-| Frontend | React + Vite | Instant HMR, no config to fight |
-| Backend | Node + Express | Local dev only — see §5 |
-| Auth | Supabase + Google OAuth | Free tier, hosted, no session code to write |
-| Payments | Razorpay | INR-native, order+verify is two endpoints |
-| Hosting | Cloudflare Workers | Static assets + API in one deploy, no cold start |
+| Layer    | Choice                  | Why it stayed                                    |
+| -------- | ----------------------- | ------------------------------------------------ |
+| Frontend | React + Vite            | Instant HMR, no config to fight                  |
+| Backend  | Node + Express          | Local dev only — see §5                          |
+| Auth     | Supabase + Google OAuth | Free tier, hosted, no session code to write      |
+| Payments | Razorpay                | INR-native, order+verify is two endpoints        |
+| Hosting  | Cloudflare Workers      | Static assets + API in one deploy, no cold start |
 
 The shape that mattered: **one repo, two independent apps** (`frontend/`,
 `backend/`), each with its own `package.json`, talking over HTTP. They never
@@ -65,7 +65,7 @@ server: {
 
 **`strictPort: true` is not optional.** The port ends up baked into three
 places you won't remember: the OAuth redirect allowlist, the provider config,
-and the backend's CORS check. Drift to 5174 and sign-in breaks *silently* —
+and the backend's CORS check. Drift to 5174 and sign-in breaks _silently_ —
 no error, just a flow that never completes.
 
 ## Call the API through the proxy, never by host
@@ -90,7 +90,8 @@ Match origins by pattern, not by literal string — the tunnel subdomain is
 random and the LAN IP changes:
 
 ```js
-const lanOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d+\.\d+):5173$/;
+const lanOrigin =
+  /^https?:\/\/(localhost|127\.0\.0\.1|(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d+\.\d+):5173$/;
 const tunnelOrigin = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/;
 ```
 
@@ -115,11 +116,11 @@ fact explains every configuration rule below.
 
 The confusion is that both are called "redirect".
 
-| Where | Setting | Value |
-|-------|---------|-------|
-| Google Cloud → Credentials | Authorized **redirect URIs** | `https://<ref>.supabase.co/auth/v1/callback` — this, forever, never changes |
-| Supabase → Auth → URL Configuration | **Site URL** | your primary production origin |
-| Supabase → Auth → URL Configuration | **Redirect URLs** | every origin the app is ever served from |
+| Where                               | Setting                      | Value                                                                       |
+| ----------------------------------- | ---------------------------- | --------------------------------------------------------------------------- |
+| Google Cloud → Credentials          | Authorized **redirect URIs** | `https://<ref>.supabase.co/auth/v1/callback` — this, forever, never changes |
+| Supabase → Auth → URL Configuration | **Site URL**                 | your primary production origin                                              |
+| Supabase → Auth → URL Configuration | **Redirect URLs**            | every origin the app is ever served from                                    |
 
 Google Cloud's "Authorized JavaScript origins" is unused by this flow. Leave it.
 
@@ -151,7 +152,7 @@ live site.
 
 - `uri_allow_list` is one **comma-separated string**, not an array.
 - `/**` does **not** match a bare origin. `location.origin` has no trailing
-  slash, so list both: `https://site.com` *and* `https://site.com/**`.
+  slash, so list both: `https://site.com` _and_ `https://site.com/**`.
 
 ## Consent screen
 
@@ -217,16 +218,18 @@ const { data } = await supabase.auth.signInWithOAuth({
   provider: 'google',
   options: { redirectTo: location.origin, skipBrowserRedirect: true },
 });
-window.top.location.href = data.url;   // in an unframed page, top === window
+window.top.location.href = data.url; // in an unframed page, top === window
 ```
 
-On the landing side, `getSession()` is what *completes* the handshake — coming
+On the landing side, `getSession()` is what _completes_ the handshake — coming
 back from the provider the credentials are still sitting in the URL:
 
 ```js
-const { data: { session } } = await client.auth.getSession();
+const {
+  data: { session },
+} = await client.auth.getSession();
 if (session) {
-  history.replaceState(null, '', location.pathname);  // clean URL survives a refresh
+  history.replaceState(null, '', location.pathname); // clean URL survives a refresh
   setUser(session.user);
 }
 ```
@@ -255,8 +258,8 @@ edits it in devtools and pays ₹1 for your top tier.
 
 ```js
 const PLANS = {
-  pro:         { name: 'Pro',         monthly: 1499 },
-  ultimate:    { name: 'Ultimate',    monthly: 3999 },
+  pro: { name: 'Pro', monthly: 1499 },
+  ultimate: { name: 'Ultimate', monthly: 3999 },
   singularity: { name: 'Singularity', monthly: 9999 },
 };
 const priceOf = (plan, cycle) => (cycle === 'annual' ? plan.monthly * 10 : plan.monthly);
@@ -267,8 +270,15 @@ const priceOf = (plan, cycle) => (cycle === 'annual' ? plan.monthly * 10 : plan.
 ```js
 await fetch('https://api.razorpay.com/v1/orders', {
   method: 'POST',
-  headers: { Authorization: 'Basic ' + btoa(`${keyId}:${keySecret}`), 'Content-Type': 'application/json' },
-  body: JSON.stringify({ amount: priceOf(plan, cycle) * 100, currency: 'INR', notes: { plan, cycle } }),
+  headers: {
+    Authorization: 'Basic ' + btoa(`${keyId}:${keySecret}`),
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    amount: priceOf(plan, cycle) * 100,
+    currency: 'INR',
+    notes: { plan, cycle },
+  }),
 });
 ```
 
@@ -280,25 +290,34 @@ signs `"<order_id>|<payment_id>"` with the key secret; recomputing it is the
 only thing that makes the callback trustworthy. Compare in constant time.
 
 Node:
+
 ```js
-const expected = crypto.createHmac('sha256', keySecret)
-  .update(`${razorpay_order_id}|${razorpay_payment_id}`).digest('hex');
+const expected = crypto
+  .createHmac('sha256', keySecret)
+  .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+  .digest('hex');
 crypto.timingSafeEqual(Buffer.from(razorpay_signature), Buffer.from(expected));
 ```
 
 Workers (no `node:crypto` — use Web Crypto):
+
 ```js
-const key = await crypto.subtle.importKey('raw', enc.encode(keySecret),
-  { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+const key = await crypto.subtle.importKey(
+  'raw',
+  enc.encode(keySecret),
+  { name: 'HMAC', hash: 'SHA-256' },
+  false,
+  ['sign'],
+);
 const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${orderId}|${paymentId}`));
-const expected = [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
+const expected = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
 ```
 
 Guard the length before `timingSafeEqual` — it throws on a mismatch.
 
 Client-side niceties that made it feel finished: `modal.ondismiss` → "nothing
 was charged", `rzp.on('payment.failed', …)`, and a distinct message for
-*paid but verification failed* — that state is real and it is not the same as
+_paid but verification failed_ — that state is real and it is not the same as
 a failure.
 
 If the listed price includes GST, work the base back out (`total / 1.18`) so the
@@ -317,7 +336,7 @@ assets; everything else falls through to the Worker.
   "name": "<worker-name>",
   "main": "worker/index.js",
   "compatibility_date": "YYYY-MM-DD",
-  "assets": { "directory": "frontend/dist", "binding": "ASSETS" }
+  "assets": { "directory": "frontend/dist", "binding": "ASSETS" },
 }
 ```
 
@@ -407,8 +426,14 @@ Host one full-screen in an iframe as the front door:
 ```
 
 ```css
-.landing-frame { position: fixed; inset: 0; width: 100%; height: 100%;
-                 border: 0; background: #000; }  /* background = no white flash */
+.landing-frame {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+} /* background = no white flash */
 ```
 
 ## Sharing one auth client between the app and the static pages
@@ -417,11 +442,11 @@ Both must read the **same stored session**, so there can only be one client
 instance — which means the app has to import the module out of `public/`.
 
 Vite blocks the obvious way. Written as a literal string it refuses:
-*"this file is in /public … should not be imported from source code"*. Only a
+_"this file is in /public … should not be imported from source code"_. Only a
 specifier it cannot statically analyse gets through:
 
 ```js
-const CLIENT_URL = `${location.origin}/experiences/supabase-client.js`;  // built at runtime
+const CLIENT_URL = `${location.origin}/experiences/supabase-client.js`; // built at runtime
 const { getSupabase } = await import(/* @vite-ignore */ CLIENT_URL);
 ```
 
@@ -465,7 +490,7 @@ generic AI-made design instantly. This is the single fastest way to make good
 work look cheap.
 
 **The resolution:** keep the colour field dark and slow-moving, and always put
-crisp high-frequency structure *on top of it* — a dot lattice, a drafting grid,
+crisp high-frequency structure _on top of it_ — a dot lattice, a drafting grid,
 particles, hairlines.
 
 Pure black with nothing on it is also wrong — it's just boring. So:
@@ -517,7 +542,7 @@ patterns. Don't rewrite code because another style is preferable.
 right? Does the logic actually work? Could it regress something? Is there a
 simpler solution?
 
-**Comments explain *why*, never *what*.** The good ones in this codebase all
+**Comments explain _why_, never _what_.** The good ones in this codebase all
 record a reason that isn't visible in the code — a 403, a silent fallback, a
 platform limitation. Those are worth their lines. `// set the name` is not.
 
@@ -539,7 +564,7 @@ transformed elements in seconds.
 force-push, branches, tags, `gh`, remotes, repo settings, PRs, issues. Local
 work — editing, `add`, `commit`, reading `log`/`diff`/`status` — needs no
 permission. The boundary is the remote. Git via Windows Credential Manager
-authenticates *silently* as you: it is not read-only access.
+authenticates _silently_ as you: it is not read-only access.
 
 **Don't push until it's confirmed good.** Finish, verify, say what's ready and
 where to look — then stop. The browser check happens before anything lands.
@@ -559,17 +584,18 @@ client file, this doc — before asking.
 
 Generalised. Each one cost hours.
 
-**Unclickable 3D cards.** Hover fired, clicks didn't. A *shared* `perspective`
-+ `preserve-3d` on the container broke Chrome's hit-testing — visual position
-and hit area diverged. Fix: give each card its own perspective instead of one
-on the parent. Found by a grid sweep, not by reading the code.
+**Unclickable 3D cards.** Hover fired, clicks didn't. A _shared_ `perspective`
+
+- `preserve-3d` on the container broke Chrome's hit-testing — visual position
+  and hit area diverged. Fix: give each card its own perspective instead of one
+  on the parent. Found by a grid sweep, not by reading the code.
 
 **Blank page after deploy.** Empty build command → the host shipped unbuilt
 source. §5.
 
 **Sign-in landing on a dead port.** Origin not in the redirect allowlist, so it
-fell back to the Site URL. §3. Recognise it by *works on localhost, fails in
-production*.
+fell back to the Site URL. §3. Recognise it by _works on localhost, fails in
+production_.
 
 **"Access blocked" from Google.** Consent screen in Testing, account not a Test
 user. §3.
@@ -580,7 +606,10 @@ user. §3.
 ignores your `background`. Only this works:
 
 ```css
-input:-webkit-autofill { -webkit-text-fill-color: #f5f5f0; box-shadow: 0 0 0 100px #0b0a08 inset; }
+input:-webkit-autofill {
+  -webkit-text-fill-color: #f5f5f0;
+  box-shadow: 0 0 0 100px #0b0a08 inset;
+}
 ```
 
 ---

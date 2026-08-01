@@ -6,7 +6,14 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   DATABASE_URL: z.string().optional(),
-  JWT_SECRET: z.string().optional(),
+  /**
+   * Required — there is deliberately no fallback. A default secret would sign
+   * tokens that any copy of this repo could forge.
+   */
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_EXPIRES_IN: z.string().default('12h'),
+  /** JSON data file, relative to the backend workspace root. `data/` is gitignored. */
+  DATA_FILE: z.string().default('data/oaa-data.json'),
 });
 
 const parsed = envSchema.safeParse(process.env);

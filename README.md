@@ -2,10 +2,10 @@
 
 Full-stack web app starter.
 
-| Layer    | Stack                                      | Dev URL                 |
-| -------- | ------------------------------------------ | ----------------------- |
-| Frontend | React 18 + TypeScript + Vite               | http://localhost:5173   |
-| Backend  | Node + Express + TypeScript (ESM)          | http://localhost:4000   |
+| Layer    | Stack                             | Dev URL               |
+| -------- | --------------------------------- | --------------------- |
+| Frontend | React 18 + TypeScript + Vite      | http://localhost:5173 |
+| Backend  | Node + Express + TypeScript (ESM) | http://localhost:4000 |
 
 ## Getting started
 
@@ -50,26 +50,26 @@ there are no CORS issues in development.
 
 Run from the repo root:
 
-| Command              | What it does                                     |
-| -------------------- | ------------------------------------------------ |
-| `npm run dev`        | Backend and frontend in watch mode                |
-| `npm run build`      | Type-checks and builds both workspaces            |
-| `npm start`          | Runs the built backend                            |
-| `npm run typecheck`  | Type-checks without emitting                      |
-| `npm run format`     | Prettier over the repo                            |
+| Command             | What it does                           |
+| ------------------- | -------------------------------------- |
+| `npm run dev`       | Backend and frontend in watch mode     |
+| `npm run build`     | Type-checks and builds both workspaces |
+| `npm start`         | Runs the built backend                 |
+| `npm run typecheck` | Type-checks without emitting           |
+| `npm run format`    | Prettier over the repo                 |
 
 Target a single workspace with `npm run <script> --workspace=backend`.
 
 ## API
 
-| Method   | Path              | Description        |
-| -------- | ----------------- | ------------------ |
-| `GET`    | `/api/health`     | Health check       |
-| `GET`    | `/api/items`      | List items         |
-| `GET`    | `/api/items/:id`  | Get one item       |
-| `POST`   | `/api/items`      | Create item        |
-| `PATCH`  | `/api/items/:id`  | Update item        |
-| `DELETE` | `/api/items/:id`  | Delete item        |
+| Method   | Path             | Description  |
+| -------- | ---------------- | ------------ |
+| `GET`    | `/api/health`    | Health check |
+| `GET`    | `/api/items`     | List items   |
+| `GET`    | `/api/items/:id` | Get one item |
+| `POST`   | `/api/items`     | Create item  |
+| `PATCH`  | `/api/items/:id` | Update item  |
+| `DELETE` | `/api/items/:id` | Delete item  |
 
 Responses are `{ "data": ... }` on success and `{ "error": { "message": ... } }` on failure.
 
