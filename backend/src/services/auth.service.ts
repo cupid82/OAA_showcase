@@ -27,16 +27,19 @@ function findUser(loginId: string, role: Role): UserRow | undefined {
   return getDb().users.find((user) => user.role === role && user.loginId.toLowerCase() === wanted);
 }
 
-/** Students carry their department; staff records arrive with the teacher module. */
+/** Students and teachers carry a department; an admin belongs to the institute. */
 export function toPublicUser(user: UserRow): PublicUser {
-  const student = getDb().students.find((row) => row.userId === user.id);
+  const db = getDb();
+  const department =
+    db.students.find((row) => row.userId === user.id)?.department ??
+    db.teachers.find((row) => row.userId === user.id)?.department;
 
   return {
     id: user.id,
     loginId: user.loginId,
     name: user.name,
     role: user.role,
-    ...(student ? { department: student.department } : {}),
+    ...(department ? { department } : {}),
   };
 }
 

@@ -16,3 +16,9 @@ export const DEMO_LOGINS: Record<Role, { loginId: string; password: string }> = 
 
 /** The other seeded students, useful for checking that pages are really per-user. */
 export const OTHER_STUDENT_LOGINS = ['22CS002', '22CS003'] as const;
+
+/**
+ * The second seeded teacher. They own a different set of subjects, which is what
+ * makes "a teacher may only touch their own classes" testable at all.
+ */
+export const OTHER_TEACHER_LOGINS = ['TCH02'] as const;

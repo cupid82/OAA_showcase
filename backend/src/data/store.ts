@@ -24,11 +24,50 @@ let db: Database | null = null;
 /** Serialises concurrent `persist()` calls so two writers cannot interleave. */
 let writeChain: Promise<void> = Promise.resolve();
 
+/**
+ * Fills in tables a file written by an earlier version of the app doesn't have.
+ *
+ * Without this, adding a table would make every existing data file crash on the
+ * first `.filter()`. An empty table is the honest answer for "this feature had not
+ * been built when your file was written" — delete the file to reseed with data.
+ */
+function withMissingTables(loaded: Partial<Database>): Database {
+  return {
+    users: loaded.users ?? [],
+    students: loaded.students ?? [],
+    teachers: loaded.teachers ?? [],
+    teacherAssignments: loaded.teacherAssignments ?? [],
+    subjects: loaded.subjects ?? [],
+    marks: loaded.marks ?? [],
+    attendance: loaded.attendance ?? [],
+    adaptabilityAssessments: loaded.adaptabilityAssessments ?? [],
+    physicalRecords: loaded.physicalRecords ?? [],
+    socialRecords: loaded.socialRecords ?? [],
+    oaaScores: loaded.oaaScores ?? [],
+    timetable: loaded.timetable ?? [],
+    announcements: loaded.announcements ?? [],
+    events: loaded.events ?? [],
+    eventRegistrations: loaded.eventRegistrations ?? [],
+    assignments: loaded.assignments ?? [],
+    submissions: loaded.submissions ?? [],
+    settings: loaded.settings ?? {
+      id: 'singleton',
+      academicYear: '2026–27',
+      currentSemester: 5,
+      attendanceThreshold: 75,
+      // Mirrors lib/oaa.ts DEFAULT_WEIGHTS. Only reached by a file written before
+      // settings existed — a fresh seed always carries its own row.
+      oaaWeights: { academic: 1, adaptability: 1, physical: 1, social: 0.5 },
+    },
+    auditLogs: loaded.auditLogs ?? [],
+  };
+}
+
 function readFromDisk(): Database | null {
   if (!existsSync(DATA_FILE)) return null;
 
   try {
-    return JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Database;
+    return withMissingTables(JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Partial<Database>);
   } catch (error) {
     // A corrupt file must not be silently replaced — that would delete real data.
     throw new Error(

@@ -4,7 +4,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Icon } from '@/components/ui/Icon';
 import { HOME_BY_ROLE, useAuth } from '@/context/AuthContext';
-import { DEMO_LOGINS, OTHER_STUDENT_LOGINS } from '@/lib/demoAccounts';
+import { DEMO_LOGINS, OTHER_STUDENT_LOGINS, OTHER_TEACHER_LOGINS } from '@/lib/demoAccounts';
 import { cn } from '@/lib/cn';
 import { ROLE_LABEL } from '@/lib/nav';
 import { COLLEGE } from '@/pages/landing/landingData';
@@ -182,6 +182,12 @@ export default function LoginPage() {
               <p className="mt-3 text-xs text-ink-500">
                 {OTHER_STUDENT_LOGINS.join(' and ')} use the same password and have different
                 records — {OTHER_STUDENT_LOGINS[0]} is below the 75% attendance threshold.
+              </p>
+            )}
+            {role === 'teacher' && (
+              <p className="mt-3 text-xs text-ink-500">
+                {OTHER_TEACHER_LOGINS[0]} uses the same password and is assigned different subjects
+                — neither teacher can mark the other's classes.
               </p>
             )}
           </div>
