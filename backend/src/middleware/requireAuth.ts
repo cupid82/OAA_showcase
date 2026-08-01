@@ -106,3 +106,9 @@ export function studentIdOf(req: Request): string {
   if (!req.studentId) throw HttpError.forbidden('No student context on this request.');
   return req.studentId;
 }
+
+/** The same narrowing for the signed-in user. Only valid after `requireAuth`. */
+export function userOf(req: Request): AuthenticatedUser {
+  if (!req.user) throw HttpError.unauthorized('Sign in to continue.');
+  return req.user;
+}

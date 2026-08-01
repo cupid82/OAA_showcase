@@ -22,4 +22,9 @@ export class HttpError extends Error {
   static notFound(message = 'Not found') {
     return new HttpError(404, message);
   }
+
+  /** The request was valid but collides with a row that already exists. */
+  static conflict(message = 'Conflict') {
+    return new HttpError(409, message);
+  }
 }
