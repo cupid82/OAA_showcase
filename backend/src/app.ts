@@ -4,9 +4,12 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { env, isProduction } from './config/env.js';
+import { attendanceRouter } from './routes/attendance.js';
 import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
+import { marksRouter } from './routes/marks.js';
 import { studentsRouter } from './routes/students.js';
+import { teachersRouter } from './routes/teachers.js';
 import { notFound } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -27,6 +30,9 @@ export function createApp() {
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/students', studentsRouter);
+  app.use('/api/teachers', teachersRouter);
+  app.use('/api/attendance', attendanceRouter);
+  app.use('/api/marks', marksRouter);
 
   app.use(notFound);
   app.use(errorHandler);

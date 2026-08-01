@@ -2,6 +2,15 @@ import { Router } from 'express';
 
 import { asyncHandler } from '../lib/asyncHandler.js';
 import { requireAuth, requireSelfOrStaff, studentIdOf } from '../middleware/requireAuth.js';
+import { leaderboardQuerySchema } from '../models/teacher.model.js';
+import {
+  getAnnouncements,
+  getAssignments,
+  getEvents,
+  getTimetable,
+} from '../services/campus.service.js';
+import { getLeaderboard } from '../services/leaderboard.service.js';
+import { getOaa } from '../services/oaa.service.js';
 import { getAttendance, getMarks, getProfile } from '../services/student.service.js';
 
 export const studentsRouter = Router();
@@ -35,6 +44,49 @@ readRoutes.get(
   '/attendance',
   asyncHandler(async (req, res) => {
     res.json({ data: getAttendance(studentIdOf(req)) });
+  }),
+);
+
+readRoutes.get(
+  '/oaa',
+  asyncHandler(async (req, res) => {
+    res.json({ data: getOaa(studentIdOf(req)) });
+  }),
+);
+
+readRoutes.get(
+  '/leaderboard',
+  asyncHandler(async (req, res) => {
+    const { scope, category } = leaderboardQuerySchema.parse(req.query);
+    res.json({ data: getLeaderboard(studentIdOf(req), scope, category) });
+  }),
+);
+
+readRoutes.get(
+  '/timetable',
+  asyncHandler(async (req, res) => {
+    res.json({ data: getTimetable(studentIdOf(req)) });
+  }),
+);
+
+readRoutes.get(
+  '/announcements',
+  asyncHandler(async (req, res) => {
+    res.json({ data: getAnnouncements(studentIdOf(req)) });
+  }),
+);
+
+readRoutes.get(
+  '/events',
+  asyncHandler(async (req, res) => {
+    res.json({ data: getEvents(studentIdOf(req)) });
+  }),
+);
+
+readRoutes.get(
+  '/assignments',
+  asyncHandler(async (req, res) => {
+    res.json({ data: getAssignments(studentIdOf(req)) });
   }),
 );
 
