@@ -10,7 +10,7 @@ import {
 
 import type { DimensionBreakdown } from '@/types';
 
-import { AXIS_TEXT, COHORT, GRID, SURFACE, YOU } from './chartTokens';
+import { AXIS_TEXT, COHORT, GRID, PLANE, YOU } from './chartTokens';
 
 /**
  * The four-dimension ability profile — the signature visual of the portal.
@@ -41,6 +41,8 @@ interface RadarPoint {
 interface TickProps {
   x?: number;
   y?: number;
+  /** Chart centre, which is how an upper axis is told from a lower one. */
+  cy?: number;
   /** Recharts sets this from the axis angle; SVG only accepts these four. */
   textAnchor?: 'start' | 'middle' | 'end' | 'inherit';
   payload?: { value?: string };
@@ -55,13 +57,21 @@ interface TickProps {
  * over it, and without them the shape is unreadable without a mouse. The exact
  * figures still live in the table below, so nothing is gated behind hover.
  */
-function DimensionTick({ x = 0, y = 0, textAnchor, payload, points = [] }: TickProps) {
+function DimensionTick({ x = 0, y = 0, cy, textAnchor, payload, points = [] }: TickProps) {
   const point = points.find((entry) => entry.dimension === payload?.value);
-  const above = y < 0 ? 0 : 1; // Top-of-chart labels need the value below the name.
+
+  /*
+    The name sits on one line and its value on the next, which pushes the pair
+    downward — into the plot for an axis at the top of the ring, where a high
+    score puts the vertex right under the label. Those get lifted by a line so the
+    pair clears the polygon. (The previous test for this was `y < 0`, which never
+    fires: SVG y is measured from the top and is always positive.)
+  */
+  const upper = typeof cy === 'number' && y < cy - 4;
 
   return (
     <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="middle">
-      <tspan x={x} dy={above ? '-0.2em' : '0'} fill={AXIS_TEXT} fontSize={13}>
+      <tspan x={x} dy={upper ? '-1.15em' : '-0.2em'} fill={AXIS_TEXT} fontSize={13}>
         {payload?.value}
       </tspan>
       <tspan x={x} dy="1.35em" fill={YOU} fontSize={14} fontWeight={600}>
@@ -92,12 +102,14 @@ export function AbilityRadar({ dimensions, cohortSize }: AbilityRadarProps) {
 
   return (
     <figure>
-      <div className="h-[22rem] w-full sm:h-[26rem]">
+      {/* Sized to the polygon rather than the column: the taller box left the
+          shape stranded in the middle with air above and below it. */}
+      <div className="h-[19rem] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart
             data={data}
-            outerRadius="70%"
-            margin={{ top: 24, right: 56, bottom: 16, left: 56 }}
+            outerRadius="72%"
+            margin={{ top: 26, right: 44, bottom: 8, left: 44 }}
           >
             <PolarGrid stroke={GRID} />
             <PolarAngleAxis
@@ -122,7 +134,7 @@ export function AbilityRadar({ dimensions, cohortSize }: AbilityRadarProps) {
               strokeWidth={1.5}
               strokeDasharray="5 4"
               fill="none"
-              dot={{ r: 3, fill: COHORT, stroke: SURFACE, strokeWidth: 1.5 }}
+              dot={{ r: 3, fill: COHORT, stroke: PLANE, strokeWidth: 1.5 }}
               isAnimationActive={false}
             />
             <Radar
@@ -132,7 +144,7 @@ export function AbilityRadar({ dimensions, cohortSize }: AbilityRadarProps) {
               strokeWidth={2.5}
               fill={YOU}
               fillOpacity={0.14}
-              dot={{ r: 4.5, fill: YOU, stroke: SURFACE, strokeWidth: 2 }}
+              dot={{ r: 4.5, fill: YOU, stroke: PLANE, strokeWidth: 2 }}
               isAnimationActive={false}
             />
 
@@ -175,21 +187,21 @@ export function AbilityRadar({ dimensions, cohortSize }: AbilityRadarProps) {
         style as well as the colour, so the two are told apart without relying on
         hue at all.
       */}
-      <div className="mt-1 flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm">
-        <span className="flex items-center gap-2 text-ink-900">
+      <div className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+        <span className="flex items-center gap-2 text-ink-800">
           <span
             aria-hidden="true"
-            className="h-[3px] w-6 rounded-full"
+            className="h-[3px] w-5 rounded-full"
             style={{ backgroundColor: YOU }}
           />
           You
         </span>
         <span className="flex items-center gap-2 text-ink-600">
-          <svg aria-hidden="true" width="24" height="3" className="overflow-visible">
+          <svg aria-hidden="true" width="20" height="3" className="overflow-visible">
             <line
               x1="0"
               y1="1.5"
-              x2="24"
+              x2="20"
               y2="1.5"
               stroke={COHORT}
               strokeWidth="1.5"
@@ -200,9 +212,13 @@ export function AbilityRadar({ dimensions, cohortSize }: AbilityRadarProps) {
         </span>
       </div>
 
-      <figcaption className="mt-3 text-sm text-ink-500">
-        Each axis runs 0 at the centre to 100 at the outer ring. The shape is the point: a balanced
-        profile fills evenly, a spike shows one ability carrying the rest.
+      {/*
+        One orienting line, not a paragraph on how to read a radar. The omitted
+        axes are the part a reader cannot infer from the drawing, so that is the
+        part worth spending words on.
+      */}
+      <figcaption className="mt-3 text-xs leading-relaxed text-ink-500">
+        0 at the centre, 100 at the outer ring.
         {omitted.length > 0 && (
           <>
             {' '}

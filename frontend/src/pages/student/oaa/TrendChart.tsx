@@ -10,7 +10,7 @@ import {
 
 import type { TrendPoint } from '@/types';
 
-import { AXIS_MUTED, AXIS_TEXT, GRID, SURFACE, YOU } from './chartTokens';
+import { AXIS_TEXT, GRID, PLANE, YOU } from './chartTokens';
 
 /**
  * OAA across semesters. One series, so no legend box — the heading names it.
@@ -41,7 +41,7 @@ export function TrendChart({ trend }: { trend: TrendPoint[] }) {
               ticks={[0, 25, 50, 75, 100]}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: AXIS_MUTED, fontSize: 12 }}
+              tick={{ fill: AXIS_TEXT, fontSize: 12 }}
             />
             <Tooltip
               cursor={{ stroke: GRID, strokeWidth: 1 }}
@@ -70,15 +70,15 @@ export function TrendChart({ trend }: { trend: TrendPoint[] }) {
               strokeWidth={2}
               strokeLinecap="round"
               connectNulls={false}
-              dot={{ r: 4, fill: YOU, stroke: SURFACE, strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: YOU, stroke: SURFACE, strokeWidth: 2 }}
+              dot={{ r: 4, fill: YOU, stroke: PLANE, strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: YOU, stroke: PLANE, strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <figcaption className="mt-3 text-sm text-ink-500">
+      <figcaption className="mt-3 text-xs text-ink-500">
         {last && points.length > 1 ? (
           <>
             Currently {last.score}, from {points[0]?.score} in semester {points[0]?.semester}.

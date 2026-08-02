@@ -37,6 +37,12 @@
   --color-accent-400: #e8b394;
   --color-accent-500: #d69771;
   --color-accent-600: #a96a43;
+  /*
+   * accent-600 measures 4.10:1 on ink-50 and 4.35:1 on white — fine for a rule or
+   * an icon, short of the 4.5:1 that small label text needs. accent-700 is the
+   * step for text: 4.78:1 on ink-50, 5.07:1 on white.
+   */
+  --color-accent-700: #9c6039;
 
   /* Warm neutral scale. ink-50 is the paper the whole site sits on. */
   --color-ink-50: #faf8f4;

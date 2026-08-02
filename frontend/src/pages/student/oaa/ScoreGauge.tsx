@@ -1,4 +1,6 @@
-import { SURFACE, TRACK, YOU } from './chartTokens';
+import { cn } from '@/lib/cn';
+
+import { PLATE, SURFACE, TRACK, TRACK_ON_PLATE, YOU, YOU_ON_PLATE } from './chartTokens';
 
 /**
  * The overall score as a single ratio against 100.
@@ -7,12 +9,20 @@ import { SURFACE, TRACK, YOU } from './chartTokens';
  * library would be all cost. Hand-rolled SVG keeps it a few dozen bytes and lets
  * the arc terminate in a round cap that reads as a dial rather than a pie slice.
  *
- * The unfilled track is a lighter step of the fill's own ramp (brand-100 under
- * brand-600), so the whole ring reads as one scale rather than fill-versus-void.
+ * The unfilled track is always another step of the fill's *own* ramp, so the ring
+ * reads as one scale rather than fill-versus-void. Which steps depends on where
+ * the meter is drawn: `tone="plate"` re-steps it for the dark hero surface, with
+ * both values validated against that surface rather than flipped from the light
+ * pair. See `chartTokens.ts` for the measured ratios.
+ *
+ * The figure itself is Newsreader. The house dataviz default puts hero numbers in
+ * the UI sans, but this portal sets every figure in the serif (see CLAUDE.md), and
+ * a lone sans number here would be the thing that looked bolted on. Proportional
+ * figures, not tabular — at this size `tabular-nums` makes a number like 82 gappy.
  */
 
 const SIZE = 200;
-const STROKE = 14;
+const STROKE = 13;
 const RADIUS = (SIZE - STROKE) / 2;
 
 /** Three-quarter dial: starts bottom-left, sweeps 270°, ends bottom-right. */
@@ -35,19 +45,27 @@ interface ScoreGaugeProps {
   /** 0–100, or null when nothing has been measured yet. */
   score: number | null;
   grade: string | null;
-  label: string | null;
+  /** Which surface the meter is drawn on. */
+  tone?: 'card' | 'plate';
+  className?: string;
 }
 
-export function ScoreGauge({ score, grade, label }: ScoreGaugeProps) {
+export function ScoreGauge({ score, grade, tone = 'card', className }: ScoreGaugeProps) {
+  const plate = tone === 'plate';
+  const fill = plate ? YOU_ON_PLATE : YOU;
+  const track = plate ? TRACK_ON_PLATE : TRACK;
+  const surface = plate ? PLATE : SURFACE;
+
   const clamped = Math.min(100, Math.max(0, score ?? 0));
   const end = START + (SWEEP * clamped) / 100;
+  const drawn = score !== null && clamped > 0;
 
   return (
-    <figure className="flex flex-col items-center">
+    <div className={className}>
       <div className="relative">
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="size-48 sm:size-56"
+          className="size-full"
           role="img"
           aria-label={
             score === null
@@ -58,55 +76,50 @@ export function ScoreGauge({ score, grade, label }: ScoreGaugeProps) {
           <path
             d={arcPath(START, START + SWEEP)}
             fill="none"
-            stroke={TRACK}
+            stroke={track}
             strokeWidth={STROKE}
             strokeLinecap="round"
           />
-          {score !== null && clamped > 0 && (
+          {drawn && (
             <path
               d={arcPath(START, end)}
               fill="none"
-              stroke={YOU}
+              stroke={fill}
               strokeWidth={STROKE}
               strokeLinecap="round"
             />
           )}
-          {/* End cap ring, so the dial's head stays legible where it meets the track. */}
-          {score !== null && clamped > 0 && (
+          {/*
+            End cap ring, in the surface colour — the 2px surface ring that keeps
+            the dial's head legible where it crosses the track.
+          */}
+          {drawn && (
             <circle
               cx={polar(end)[0]}
               cy={polar(end)[1]}
               r={STROKE / 2 - 3}
-              fill={SURFACE}
-              stroke={YOU}
+              fill={surface}
+              stroke={fill}
               strokeWidth="2"
             />
           )}
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {/*
-            Serif, matching every other figure in this portal. The house dataviz
-            default is sans, but here serif is the brand voice — a lone sans number
-            would be the thing that looked bolted on.
-          */}
-          <span className="font-serif text-5xl leading-none text-ink-900 sm:text-6xl">
+          {/* Proportional figures, not tabular — see the note at the top of this file. */}
+          <span
+            className={cn(
+              'font-serif text-[3.75rem] leading-none sm:text-[4.5rem]',
+              plate ? 'text-ink-100' : 'text-ink-900',
+            )}
+          >
             {score === null ? '—' : Math.round(score)}
           </span>
-          <span className="kicker mt-2 text-ink-500">out of 100</span>
+          <span className={cn('kicker mt-1', plate ? 'text-ink-400' : 'text-ink-500')}>
+            out of 100
+          </span>
         </div>
       </div>
-
-      <figcaption className="mt-4 text-center">
-        {grade ? (
-          <>
-            <span className="font-serif text-2xl text-ink-900">Grade {grade}</span>
-            {label && <span className="mt-1 block text-sm text-ink-600">{label}</span>}
-          </>
-        ) : (
-          <span className="text-sm text-ink-600">Not enough recorded yet to score</span>
-        )}
-      </figcaption>
-    </figure>
+    </div>
   );
 }
