@@ -21,6 +21,7 @@ export interface PublicUser {
   loginId: string;
   name: string;
   role: Role;
+  email?: string;
   department?: string;
   /** Students only: false until onboarding is finished. */
   onboarded?: boolean;

@@ -1,5 +1,5 @@
 /**
- * Domain entities for the file-backed store.
+ * Domain entities.
  *
  * OAA is the student's growth layer, not a second ERP: marks, attendance, fees and
  * timetables stay in the college's system of record. What lives here is what the
@@ -7,16 +7,20 @@
  * track, their check-ins and their connected accounts.
  *
  * Rows are shaped like relational rows — string ids, foreign keys, very little
- * nesting — so that swapping the store for a real database later is a change of
- * `data/store.ts` and the service queries, not of the domain model.
+ * nesting. Each table maps one-to-one onto a Postgres table in `data/schema.ts`;
+ * the JSON file and Supabase Postgres store exactly the same shapes.
  */
 
 export type Role = 'student' | 'admin';
 
-/** Bumped whenever a table is added, removed or reshaped. See `store.ts`. */
-export const SCHEMA_VERSION = 2;
+/**
+ * Bumped whenever a table is added, removed or reshaped. The JSON store sets an
+ * older file aside; the Postgres store refuses to start against an older schema.
+ */
+export const SCHEMA_VERSION = 3;
 
 export interface MetaRow {
+  id: 'singleton';
   schemaVersion: number;
   seededAt: string;
 }
@@ -24,12 +28,19 @@ export interface MetaRow {
 /** Credentials only. Never send this to the client — map it through a service. */
 export interface UserRow {
   id: string;
-  /** Roll number for students, staff ID for admins. Unique, case-insensitive. */
+  /**
+   * Roll number for seeded students, staff ID for seeded admins, the email address
+   * for anyone who joined with Google. Unique, case-insensitive.
+   */
   loginId: string;
   role: Role;
   name: string;
-  /** bcrypt hash, cost 10. A plaintext password is never stored. */
-  passwordHash: string;
+  /** Lowercase. How a Google sign-in finds an existing account. */
+  email: string | null;
+  /** The Supabase Auth user id, once this account has signed in with Google. */
+  authId: string | null;
+  /** bcrypt hash, cost 10. Null for Google-only accounts. Never plaintext. */
+  passwordHash: string | null;
   createdAt: string;
 }
 
@@ -54,16 +65,18 @@ export interface StudentRow {
   id: string;
   userId: string;
   /*
-   * The four fields below come from the college's records and are read-only in
-   * OAA. `recordsSyncedAt` is shown next to them — ERP-derived data always says
-   * where it came from and when.
+   * These come from the college's records and are read-only in OAA, and
+   * `recordsSyncedAt` is shown next to them — ERP-derived data always says where
+   * it came from and when. A student who joined with Google has no college record
+   * yet: `recordsSyncedAt` is null, the details are self-reported at onboarding,
+   * and they can correct them in Settings.
    */
-  rollNo: string;
+  rollNo: string | null;
   name: string;
-  department: string;
+  department: string | null;
   /** Year of study, 1–4. */
-  year: number;
-  recordsSyncedAt: string;
+  year: number | null;
+  recordsSyncedAt: string | null;
 
   email: string;
   /** Public portfolio address, `/p/<handle>`. Lowercase, unique. */

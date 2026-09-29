@@ -1,7 +1,12 @@
 import { Router } from 'express';
 
 import { asyncHandler } from '../lib/asyncHandler.js';
-import { requireAuth, requireStudent, studentIdOf } from '../middleware/requireAuth.js';
+import {
+  requireAuth,
+  requireStudent,
+  requireStudentAccount,
+  studentIdOf,
+} from '../middleware/requireAuth.js';
 import { dismissSchema } from '../models/misc.model.js';
 import {
   goalSchema,
@@ -20,11 +25,12 @@ import {
 
 /**
  * The signed-in student's own account. There is no student id anywhere in these
- * paths — `requireStudent` supplies the caller's.
+ * paths — the guard supplies the caller's. These are the only student routes open
+ * before onboarding is finished, since onboarding itself goes through them.
  */
 export const meRouter = Router();
 
-meRouter.use(requireAuth, requireStudent);
+meRouter.use(requireAuth, requireStudentAccount);
 
 meRouter.get(
   '/',

@@ -2224,7 +2224,72 @@ const APPLICATION_SEEDS: {
 
 // --- Build --------------------------------------------------------------------------
 
-export async function buildSeed(now: Date = new Date()): Promise<Database> {
+/**
+ * The part every installation needs: the skill catalogue, the goals, the curated
+ * project ideas and the institute settings. No people, no listings.
+ */
+function baseline(now: Date): Database {
+  return {
+    meta: { id: 'singleton', schemaVersion: SCHEMA_VERSION, seededAt: now.toISOString() },
+    users: [],
+    students: [],
+    preferences: [],
+    skills: SKILL_SEEDS.map((skill) => ({ ...skill })),
+    tracks: TRACK_SEEDS.map((track) => ({ ...track, skills: track.skills.map((s) => ({ ...s })) })),
+    studentSkills: [],
+    practiceLogs: [],
+    certificates: [],
+    projects: [],
+    projectTasks: [],
+    projectMembers: [],
+    joinRequests: [],
+    projectIdeas: IDEA_SEEDS.map((idea) => ({ ...idea })),
+    events: [],
+    eventParticipation: [],
+    jobs: [],
+    applications: [],
+    dismissals: [],
+    checkins: [],
+    connections: [],
+    notifications: [],
+    momentum: [],
+    settings: {
+      id: 'singleton',
+      academicYear: '2026–27',
+      // ⚠️ Placeholder — the college's real ERP address goes here.
+      erpName: 'College ERP',
+      erpUrl: 'https://erp.college.example',
+      momentumPoints: { ...DEFAULT_POINTS },
+      wellbeingSupport: [
+        {
+          // ⚠️ Placeholder — replace with the college's real counselling service.
+          name: 'Student Wellness Centre',
+          detail:
+            'Free, confidential counselling. Walk in Monday to Saturday, 9:00–17:00, or book a slot by email.',
+          contact: 'wellness@college.example',
+        },
+        {
+          name: 'Tele-MANAS',
+          detail:
+            'The Government of India’s free, 24×7 mental-health helpline, in over twenty languages.',
+          contact: '14416 or 1-800-891-4416',
+        },
+      ],
+    },
+    auditLogs: [],
+  };
+}
+
+/**
+ * @param demo false seeds only the baseline — what a real launch wants. The demo
+ *   adds fourteen students, their projects, events, jobs and check-ins.
+ */
+export async function buildSeed({
+  demo = true,
+  now = new Date(),
+}: { demo?: boolean; now?: Date } = {}): Promise<Database> {
+  if (!demo) return baseline(now);
+
   const random = mulberry32(20260929);
   const TODAY = toISODate(now);
   const day = (offset: number) => addDays(TODAY, offset);
@@ -2249,6 +2314,8 @@ export async function buildSeed(now: Date = new Date()): Promise<Database> {
     loginId: 'ADM01',
     role: 'admin',
     name: 'Deepa Krishnan',
+    email: 'moderator@college.example',
+    authId: null,
     passwordHash: await hash('admin123'),
     createdAt,
   });
@@ -2263,6 +2330,8 @@ export async function buildSeed(now: Date = new Date()): Promise<Database> {
       loginId: seed.rollNo,
       role: 'student',
       name: seed.name,
+      email: `${seed.rollNo.toLowerCase()}@college.example`,
+      authId: null,
       passwordHash: await hash('student123'),
       createdAt,
     });
@@ -2596,12 +2665,10 @@ export async function buildSeed(now: Date = new Date()): Promise<Database> {
   ];
 
   const db: Database = {
-    meta: { schemaVersion: SCHEMA_VERSION, seededAt: now.toISOString() },
+    ...baseline(now),
     users,
     students,
     preferences,
-    skills: SKILL_SEEDS.map((skill) => ({ ...skill })),
-    tracks: TRACK_SEEDS.map((track) => ({ ...track, skills: track.skills.map((s) => ({ ...s })) })),
     studentSkills,
     practiceLogs,
     certificates,
@@ -2609,40 +2676,12 @@ export async function buildSeed(now: Date = new Date()): Promise<Database> {
     projectTasks,
     projectMembers,
     joinRequests,
-    projectIdeas: IDEA_SEEDS.map((idea) => ({ ...idea })),
     events,
     eventParticipation,
     jobs,
     applications,
-    dismissals: [],
     checkins,
-    connections: [],
     notifications,
-    momentum: [],
-    settings: {
-      id: 'singleton',
-      academicYear: '2026–27',
-      // ⚠️ Placeholder — the college's real ERP address goes here.
-      erpName: 'College ERP',
-      erpUrl: 'https://erp.college.example',
-      momentumPoints: { ...DEFAULT_POINTS },
-      wellbeingSupport: [
-        {
-          // ⚠️ Placeholder — replace with the college's real counselling service.
-          name: 'Student Wellness Centre',
-          detail:
-            'Free, confidential counselling. Walk in Monday to Saturday, 9:00–17:00, or book a slot by email.',
-          contact: 'wellness@college.example',
-        },
-        {
-          name: 'Tele-MANAS',
-          detail:
-            'The Government of India’s free, 24×7 mental-health helpline, in over twenty languages.',
-          contact: '14416 or 1-800-891-4416',
-        },
-      ],
-    },
-    auditLogs: [],
   };
 
   // Points come from the same engine the API uses — never written by hand.

@@ -45,3 +45,6 @@ Thumbs.db
 /backend/data/
 *.sqlite
 *.sqlite3
+
+# Video / Media
+*.mp4
