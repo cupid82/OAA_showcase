@@ -1,16 +1,18 @@
 /**
  * Authentication and authorisation guards.
  *
- * Rule 4 of CLAUDE.md: a protected route checks **role and ownership**. Being "a
- * student" is never enough to read `/api/students/42/marks` — you must be
- * student 42. `requireSelfOrStaff` is what enforces that second half.
+ * Rule 4 of CLAUDE.md: a protected route checks **role and ownership**. Student
+ * routes never take a student id from the URL — `requireStudent` resolves the
+ * caller's own record from their token, so there is no id to tamper with. Rows
+ * inside a student's area (a project, a certificate) are then checked against
+ * that id in the service, in one named function per module.
  */
 import type { Request, RequestHandler } from 'express';
 
 import { getDb } from '../data/store.js';
 import type { Role } from '../data/types.js';
 import { HttpError } from '../lib/httpError.js';
-import { verifyToken } from '../services/auth.service.js';
+import { currentRole, verifyToken } from '../services/auth.service.js';
 
 export interface AuthenticatedUser {
   id: string;
@@ -21,7 +23,7 @@ declare module 'express-serve-static-core' {
   interface Request {
     /** Set by `requireAuth`. */
     user?: AuthenticatedUser;
-    /** Set by `requireSelfOrStaff`. Always an id the caller is allowed to read. */
+    /** Set by `requireStudent`. Always the caller's own student record. */
     studentId?: string;
   }
 }
@@ -34,13 +36,19 @@ function bearerToken(req: Request): string | null {
   return token.length > 0 ? token : null;
 }
 
-/** Rejects anything without a valid, unexpired token. */
+/**
+ * Rejects anything without a valid, unexpired token for an account that still
+ * exists. The role is read from the account, not trusted from the token.
+ */
 export const requireAuth: RequestHandler = (req, _res, next) => {
   const token = bearerToken(req);
   if (!token) return next(HttpError.unauthorized('Sign in to continue.'));
 
   try {
-    const { sub, role } = verifyToken(token);
+    const { sub } = verifyToken(token);
+    const role = currentRole(sub);
+    if (!role) return next(HttpError.unauthorized('This account no longer exists.'));
+
     req.user = { id: sub, role };
     next();
   } catch (error) {
@@ -62,42 +70,20 @@ export function requireRole(...allowed: Role[]): RequestHandler {
 }
 
 /**
- * Resolves `:studentId` (or the literal `me`) to a student record and checks the
- * caller may see it: the student themselves, or a teacher/admin.
- *
- * The resolved id is attached to the request so handlers never re-derive it —
- * re-deriving is how an ownership check drifts away from the query it guards.
+ * Must run after `requireAuth`. Admits student accounts only, and attaches the
+ * caller's own student id — the only one any handler behind it will ever use.
  */
-export const requireSelfOrStaff: RequestHandler = (req, _res, next) => {
+export const requireStudent: RequestHandler = (req, _res, next) => {
   const user = req.user;
   if (!user) return next(HttpError.unauthorized('Sign in to continue.'));
-
-  const { students } = getDb();
-  const param = req.params.studentId ?? 'me';
-
-  if (user.role === 'student') {
-    const own = students.find((student) => student.userId === user.id);
-    if (!own) return next(HttpError.forbidden('This account is not linked to a student record.'));
-
-    // A student may only ever address their own record — by id or by "me".
-    if (param !== 'me' && param !== own.id) {
-      return next(HttpError.forbidden('You can only view your own record.'));
-    }
-
-    req.studentId = own.id;
-    return next();
+  if (user.role !== 'student') {
+    return next(HttpError.forbidden('This part of OAA is for student accounts.'));
   }
 
-  // Staff may read any student, but "me" is meaningless for them.
-  if (param === 'me') {
-    return next(HttpError.badRequest('Staff accounts must request a specific student id.'));
-  }
+  const own = getDb().students.find((student) => student.userId === user.id);
+  if (!own) return next(HttpError.forbidden('This account is not linked to a student record.'));
 
-  if (!students.some((student) => student.id === param)) {
-    return next(HttpError.notFound('Student not found.'));
-  }
-
-  req.studentId = param;
+  req.studentId = own.id;
   next();
 };
 

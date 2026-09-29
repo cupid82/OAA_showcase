@@ -27,4 +27,14 @@ export class HttpError extends Error {
   static conflict(message = 'Conflict') {
     return new HttpError(409, message);
   }
+
+  /** An upstream service (GitHub) is rate-limiting us. */
+  static tooManyRequests(message = 'Too many requests') {
+    return new HttpError(429, message);
+  }
+
+  /** An upstream service could not be reached or answered badly. */
+  static badGateway(message = 'Upstream service unavailable') {
+    return new HttpError(502, message);
+  }
 }

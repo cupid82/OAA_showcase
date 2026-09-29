@@ -14,6 +14,12 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('12h'),
   /** JSON data file, relative to the backend workspace root. `data/` is gitignored. */
   DATA_FILE: z.string().default('data/oaa-data.json'),
+  /**
+   * Optional. GitHub's public API allows 60 unauthenticated requests an hour per
+   * IP; a personal access token with no scopes raises that to 5,000. Syncing works
+   * without it.
+   */
+  GITHUB_TOKEN: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

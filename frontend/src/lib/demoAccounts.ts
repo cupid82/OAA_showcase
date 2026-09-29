@@ -3,22 +3,34 @@
  *
  * These are *real* credentials — the ones `backend/src/data/seed.ts` creates on
  * first run — not mock users. The block that renders them should come out when
- * the portal is used with real accounts; the seed itself is what to change to
- * alter them.
+ * OAA is used with real accounts; the seed is what to change to alter them.
  */
-import type { Role } from '@/types';
 
-export const DEMO_LOGINS: Record<Role, { loginId: string; password: string }> = {
-  student: { loginId: '22CS001', password: 'student123' },
-  teacher: { loginId: 'TCH01', password: 'teacher123' },
-  admin: { loginId: 'ADM01', password: 'admin123' },
-};
+export const DEMO_PASSWORD = { student: 'student123', admin: 'admin123' } as const;
 
-/** The other seeded students, useful for checking that pages are really per-user. */
-export const OTHER_STUDENT_LOGINS = ['22CS002', '22CS003'] as const;
-
-/**
- * The second seeded teacher. They own a different set of subjects, which is what
- * makes "a teacher may only touch their own classes" testable at all.
- */
-export const OTHER_TEACHER_LOGINS = ['TCH02'] as const;
+export const DEMO_ACCOUNTS = [
+  {
+    loginId: '22CS001',
+    password: DEMO_PASSWORD.student,
+    who: 'Ananya — the main demo account',
+    note: 'Busy builder. GitHub isn’t connected yet — try linking your own.',
+  },
+  {
+    loginId: '22CS002',
+    password: DEMO_PASSWORD.student,
+    who: 'Rohan — overloaded',
+    note: 'His check-ins read “running hot”, so his dashboard goes quiet.',
+  },
+  {
+    loginId: '22CS010',
+    password: DEMO_PASSWORD.student,
+    who: 'Arjun — first sign-in',
+    note: 'Not onboarded yet: lands on the welcome flow.',
+  },
+  {
+    loginId: 'ADM01',
+    password: DEMO_PASSWORD.admin,
+    who: 'Moderator',
+    note: 'Publishes and reviews events and jobs.',
+  },
+] as const;

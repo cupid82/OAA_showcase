@@ -1,21 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 
+import { NotificationBell } from '@/components/layout/NotificationBell';
 import { Icon } from '@/components/ui/Icon';
 import { HOME_BY_ROLE, useAuth } from '@/context/AuthContext';
+import { initialsOf } from '@/lib/format';
 import { ROLE_LABEL } from '@/lib/nav';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
   sidebarOpen: boolean;
-}
-
-function initialsOf(name: string) {
-  return name
-    .replace(/^(Dr|Prof|Mr|Ms|Mrs)\.?\s+/i, '')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
 }
 
 export function Navbar({ onToggleSidebar, sidebarOpen }: NavbarProps) {
@@ -41,13 +34,16 @@ export function Navbar({ onToggleSidebar, sidebarOpen }: NavbarProps) {
         </button>
 
         <Link to={user ? HOME_BY_ROLE[user.role] : '/'} className="flex items-baseline gap-2.5">
-          <span className="font-serif text-xl text-ink-900">Avelin</span>
-          <span className="kicker hidden text-ink-400 sm:inline">Portal</span>
+          <span className="font-serif text-2xl leading-none text-ink-900">OAA</span>
+          <span className="kicker hidden text-ink-400 sm:inline">
+            {user?.role === 'admin' ? 'Moderation' : 'Build · Learn · Go'}
+          </span>
         </Link>
 
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-3 sm:gap-4">
           {user && (
             <>
+              <NotificationBell />
               <div className="hidden text-right sm:block">
                 <p className="text-sm leading-tight text-ink-900">{user.name}</p>
                 <p className="kicker mt-1 text-ink-500">

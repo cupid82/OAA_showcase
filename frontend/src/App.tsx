@@ -1,98 +1,86 @@
-import type { ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { OnboardingGate, ProtectedRoute } from '@/components/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { ComingSoon } from '@/pages/ComingSoon';
-import DashboardPage from '@/pages/DashboardPage';
+import ListingFormPage from '@/pages/admin/ListingFormPage';
+import ListingsPage from '@/pages/admin/ListingsPage';
+import OverviewPage from '@/pages/admin/OverviewPage';
 import LoginPage from '@/pages/LoginPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import LandingPage from '@/pages/landing/LandingPage';
-import AnnouncementsPage from '@/pages/student/AnnouncementsPage';
-import AssignmentsPage from '@/pages/student/AssignmentsPage';
-import AttendancePage from '@/pages/student/AttendancePage';
-import EventsPage from '@/pages/student/EventsPage';
+import PortfolioPage from '@/pages/portfolio/PortfolioPage';
+import ConnectionsPage from '@/pages/student/ConnectionsPage';
+import DashboardPage from '@/pages/student/DashboardPage';
 import LeaderboardPage from '@/pages/student/LeaderboardPage';
-import MarksPage from '@/pages/student/MarksPage';
-import ProfilePage from '@/pages/student/ProfilePage';
-import TimetablePage from '@/pages/student/TimetablePage';
-import OaaPage from '@/pages/student/oaa/OaaPage';
-import TeacherAssessmentsPage from '@/pages/teacher/AssessmentsPage';
-import TeacherAttendancePage from '@/pages/teacher/AttendancePage';
-import TeacherClassesPage from '@/pages/teacher/ClassesPage';
-import TeacherDashboardPage from '@/pages/teacher/DashboardPage';
-import TeacherMarksPage from '@/pages/teacher/MarksPage';
-import TeacherStudentDetailPage from '@/pages/teacher/StudentDetailPage';
-import TeacherStudentsPage from '@/pages/teacher/StudentsPage';
-import { NAV_BY_ROLE } from '@/lib/nav';
-import type { Role } from '@/types';
-import { ROLES } from '@/types';
+import OnboardingPage from '@/pages/student/OnboardingPage';
+import SettingsPage from '@/pages/student/SettingsPage';
+import BurnoutPage from '@/pages/student/burnout/BurnoutPage';
+import EventDetailPage from '@/pages/student/opportunities/EventDetailPage';
+import EventsPage from '@/pages/student/opportunities/EventsPage';
+import JobDetailPage from '@/pages/student/opportunities/JobDetailPage';
+import JobsPage from '@/pages/student/opportunities/JobsPage';
+import ShareListingPage from '@/pages/student/opportunities/ShareListingPage';
+import ProjectDetailPage from '@/pages/student/projects/ProjectDetailPage';
+import ProjectFormPage from '@/pages/student/projects/ProjectFormPage';
+import ProjectsPage from '@/pages/student/projects/ProjectsPage';
+import SkillDetailPage from '@/pages/student/skills/SkillDetailPage';
+import SkillsPage from '@/pages/student/skills/SkillsPage';
 
 /**
- * Pages that are actually built, keyed by path. Anything in the sidebar without an
- * entry here still carries a `step` in lib/nav.ts and resolves to ComingSoon.
+ * Home page → sign in → your dashboard. Every route below is built; there is no
+ * placeholder page left in the app.
  */
-const BUILT_PAGES: Record<string, ReactElement> = {
-  '/student/profile': <ProfilePage />,
-  '/student/marks': <MarksPage />,
-  '/student/attendance': <AttendancePage />,
-  '/student/oaa': <OaaPage />,
-  '/student/leaderboard': <LeaderboardPage />,
-  '/student/timetable': <TimetablePage />,
-  '/student/announcements': <AnnouncementsPage />,
-  '/student/events': <EventsPage />,
-  '/student/assignments': <AssignmentsPage />,
-  '/teacher/classes': <TeacherClassesPage />,
-  '/teacher/attendance': <TeacherAttendancePage />,
-  '/teacher/marks': <TeacherMarksPage />,
-  '/teacher/students': <TeacherStudentsPage />,
-  '/teacher/assessments': <TeacherAssessmentsPage />,
-};
-
-/** Role landing pages. A role without its own falls back to the module index. */
-const DASHBOARDS: Partial<Record<Role, ReactElement>> = {
-  teacher: <TeacherDashboardPage />,
-};
-
-/** Routes that are not in the sidebar — detail pages reached from a list. */
-const DETAIL_ROUTES: Partial<Record<Role, ReactElement>> = {
-  teacher: <Route path="/teacher/students/:studentId" element={<TeacherStudentDetailPage />} />,
-};
-
-/** One protected route group per role. */
-function roleRoutes(role: Role) {
-  return (
-    <Route key={role} element={<ProtectedRoute allow={[role]} />}>
-      <Route element={<AppLayout />}>
-        <Route path={`/${role}`} element={DASHBOARDS[role] ?? <DashboardPage />} />
-        {NAV_BY_ROLE[role]
-          .filter((item) => item.to !== `/${role}`)
-          .map((item) => (
-            <Route
-              key={item.to}
-              path={item.to}
-              element={
-                BUILT_PAGES[item.to] ?? (
-                  <ComingSoon title={item.label} step={item.step ?? 0} description={item.blurb} />
-                )
-              }
-            />
-          ))}
-        {DETAIL_ROUTES[role]}
-      </Route>
-    </Route>
-  );
-}
-
 export default function App() {
   return (
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/p/:handle" element={<PortfolioPage />} />
 
-      {/* Student / teacher / admin areas */}
-      {ROLES.map(roleRoutes)}
+      {/* Student */}
+      <Route element={<ProtectedRoute allow={['student']} />}>
+        <Route path="/student/welcome" element={<OnboardingPage />} />
+        <Route element={<OnboardingGate />}>
+          <Route element={<AppLayout />}>
+            <Route path="/student" element={<DashboardPage />} />
+
+            <Route path="/student/projects" element={<ProjectsPage />} />
+            <Route path="/student/projects/new" element={<ProjectFormPage />} />
+            <Route path="/student/projects/:projectId" element={<ProjectDetailPage />} />
+            <Route path="/student/projects/:projectId/edit" element={<ProjectFormPage />} />
+
+            <Route path="/student/skills" element={<SkillsPage />} />
+            <Route path="/student/skills/:skillId" element={<SkillDetailPage />} />
+
+            <Route path="/student/events" element={<EventsPage />} />
+            <Route path="/student/events/share" element={<ShareListingPage kind="event" />} />
+            <Route path="/student/events/:eventId" element={<EventDetailPage />} />
+
+            <Route path="/student/jobs" element={<JobsPage />} />
+            <Route path="/student/jobs/share" element={<ShareListingPage kind="job" />} />
+            <Route path="/student/jobs/:jobId" element={<JobDetailPage />} />
+
+            <Route path="/student/burnout" element={<BurnoutPage />} />
+            <Route path="/student/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/student/connections" element={<ConnectionsPage />} />
+            <Route path="/student/settings" element={<SettingsPage />} />
+          </Route>
+        </Route>
+      </Route>
+
+      {/* Moderator */}
+      <Route element={<ProtectedRoute allow={['admin']} />}>
+        <Route element={<AppLayout />}>
+          <Route path="/admin" element={<OverviewPage />} />
+          <Route path="/admin/events" element={<ListingsPage kind="event" />} />
+          <Route path="/admin/events/new" element={<ListingFormPage kind="event" />} />
+          <Route path="/admin/events/:id/edit" element={<ListingFormPage kind="event" />} />
+          <Route path="/admin/jobs" element={<ListingsPage kind="job" />} />
+          <Route path="/admin/jobs/new" element={<ListingFormPage kind="job" />} />
+          <Route path="/admin/jobs/:id/edit" element={<ListingFormPage kind="job" />} />
+        </Route>
+      </Route>
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

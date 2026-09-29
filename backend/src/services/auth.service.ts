@@ -22,24 +22,21 @@ export interface TokenPayload {
  */
 const DUMMY_HASH = hashSync('no-such-user', 10);
 
-function findUser(loginId: string, role: Role): UserRow | undefined {
+/** Login ids are unique across roles, so the id alone finds the account. */
+function findUser(loginId: string): UserRow | undefined {
   const wanted = loginId.trim().toLowerCase();
-  return getDb().users.find((user) => user.role === role && user.loginId.toLowerCase() === wanted);
+  return getDb().users.find((user) => user.loginId.toLowerCase() === wanted);
 }
 
-/** Students and teachers carry a department; an admin belongs to the institute. */
 export function toPublicUser(user: UserRow): PublicUser {
-  const db = getDb();
-  const department =
-    db.students.find((row) => row.userId === user.id)?.department ??
-    db.teachers.find((row) => row.userId === user.id)?.department;
+  const student = getDb().students.find((row) => row.userId === user.id);
 
   return {
     id: user.id,
     loginId: user.loginId,
     name: user.name,
     role: user.role,
-    ...(department ? { department } : {}),
+    ...(student ? { department: student.department, onboarded: student.onboardedAt !== null } : {}),
   };
 }
 
@@ -66,13 +63,13 @@ export function verifyToken(token: string): TokenPayload {
   }
 }
 
-export async function login({ loginId, password, role }: LoginInput): Promise<AuthSession> {
-  const user = findUser(loginId, role);
+export async function login({ loginId, password }: LoginInput): Promise<AuthSession> {
+  const user = findUser(loginId);
   const matches = await compare(password, user?.passwordHash ?? DUMMY_HASH);
 
   // One message for every failure mode — never reveal which half was wrong.
   if (!user || !matches) {
-    throw HttpError.unauthorized('Invalid credentials. Check your ID, password and role.');
+    throw HttpError.unauthorized('That ID and password do not match an account.');
   }
 
   return { token: signToken(user), user: toPublicUser(user) };
@@ -82,4 +79,13 @@ export function getUserById(id: string): UserRow {
   const user = getDb().users.find((row) => row.id === id);
   if (!user) throw HttpError.unauthorized('This account no longer exists.');
   return user;
+}
+
+/**
+ * The role in a token is a claim made when it was signed. Guards compare it with
+ * the account as it is now, so a role change takes effect without waiting for
+ * the old token to expire.
+ */
+export function currentRole(userId: string): Role | null {
+  return getDb().users.find((row) => row.id === userId)?.role ?? null;
 }

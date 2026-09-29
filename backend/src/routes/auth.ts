@@ -1,10 +1,9 @@
 import { Router } from 'express';
 
 import { asyncHandler } from '../lib/asyncHandler.js';
-import { requireAuth } from '../middleware/requireAuth.js';
+import { requireAuth, userOf } from '../middleware/requireAuth.js';
 import { loginSchema } from '../models/auth.model.js';
 import { getUserById, login, toPublicUser } from '../services/auth.service.js';
-import { HttpError } from '../lib/httpError.js';
 
 export const authRouter = Router();
 
@@ -16,8 +15,7 @@ authRouter.post(
   '/login',
   asyncHandler(async (req, res) => {
     const credentials = loginSchema.parse(req.body);
-    const session = await login(credentials);
-    res.json({ data: session });
+    res.json({ data: await login(credentials) });
   }),
 );
 
@@ -26,7 +24,6 @@ authRouter.get(
   '/me',
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (!req.user) throw HttpError.unauthorized('Sign in to continue.');
-    res.json({ data: toPublicUser(getUserById(req.user.id)) });
+    res.json({ data: toPublicUser(getUserById(userOf(req).id)) });
   }),
 );

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Icon } from '@/components/ui/Icon';
-import { LoginButtons } from '@/pages/landing/components/LoginButtons';
 import { COLLEGE, NAV_LINKS } from '@/pages/landing/landingData';
 
 export function LandingNav() {
@@ -12,8 +11,8 @@ export function LandingNav() {
     <header className="sticky top-0 z-40 border-b border-ink-200 bg-white/92 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Link to="/" className="flex items-baseline gap-2.5">
-          <span className="font-serif text-xl text-ink-900">{COLLEGE.short}</span>
-          <span className="kicker text-ink-400">Est. {COLLEGE.established}</span>
+          <span className="font-serif text-2xl leading-none text-ink-900">OAA</span>
+          <span className="kicker hidden text-ink-400 sm:inline">for {COLLEGE.short} students</span>
         </Link>
 
         <nav aria-label="Sections" className="hidden items-center gap-6 lg:flex">
@@ -28,12 +27,12 @@ export function LandingNav() {
           ))}
         </nav>
 
-        {/* One quiet way in from the nav — the three role cards in the hero are the real entry. */}
         <Link
           to="/login"
-          className="kicker ml-auto hidden border border-ink-300 px-4 py-2.5 text-ink-600 transition hover:border-ink-900 hover:text-ink-900 lg:block"
+          className="kicker ml-auto hidden items-center gap-2 border border-brand-600 bg-brand-600 px-4 py-2.5 text-white transition hover:border-brand-500 hover:bg-brand-500 sm:inline-flex"
         >
           Sign in
+          <Icon name="arrowRight" className="size-4" />
         </Link>
 
         <button
@@ -41,7 +40,7 @@ export function LandingNav() {
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
           aria-label={open ? 'Close menu' : 'Open menu'}
-          className="ml-auto p-2 text-ink-700 transition hover:text-ink-900 lg:hidden"
+          className="ml-auto p-2 text-ink-700 transition hover:text-ink-900 sm:ml-0 lg:hidden"
         >
           <Icon name={open ? 'close' : 'menu'} />
         </button>
@@ -60,7 +59,12 @@ export function LandingNav() {
                 {link.label}
               </a>
             ))}
-            <LoginButtons className="mt-5" onNavigate={() => setOpen(false)} />
+            <Link
+              to="/login"
+              className="kicker mt-5 flex items-center justify-center gap-2 border border-brand-600 bg-brand-600 px-4 py-3 text-white"
+            >
+              Sign in
+            </Link>
           </nav>
         </div>
       )}

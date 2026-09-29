@@ -7,14 +7,16 @@
  *
  * Everything above this file talks to services, and services talk to `getDb()`.
  * Nothing else reads or writes the JSON. That is the seam: replacing this file
- * with Prisma leaves routes and pages untouched.
+ * with a real database leaves routes and pages untouched.
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync } from 'node:fs';
 import { rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { env } from '../config/env.js';
+import { DEFAULT_POINTS } from '../lib/momentum.js';
 import { buildSeed } from './seed.js';
+import { SCHEMA_VERSION } from './types.js';
 import type { Database } from './types.js';
 
 const DATA_FILE = path.resolve(process.cwd(), env.DATA_FILE);
@@ -25,55 +27,82 @@ let db: Database | null = null;
 let writeChain: Promise<void> = Promise.resolve();
 
 /**
- * Fills in tables a file written by an earlier version of the app doesn't have.
- *
- * Without this, adding a table would make every existing data file crash on the
- * first `.filter()`. An empty table is the honest answer for "this feature had not
- * been built when your file was written" — delete the file to reseed with data.
+ * Fills in tables a file written by an earlier build of the same schema doesn't
+ * have yet. Without this, adding a table would make every existing data file
+ * crash on the first `.filter()`.
  */
 function withMissingTables(loaded: Partial<Database>): Database {
   return {
+    meta: loaded.meta ?? { schemaVersion: SCHEMA_VERSION, seededAt: new Date().toISOString() },
     users: loaded.users ?? [],
     students: loaded.students ?? [],
-    teachers: loaded.teachers ?? [],
-    teacherAssignments: loaded.teacherAssignments ?? [],
-    subjects: loaded.subjects ?? [],
-    marks: loaded.marks ?? [],
-    attendance: loaded.attendance ?? [],
-    adaptabilityAssessments: loaded.adaptabilityAssessments ?? [],
-    physicalRecords: loaded.physicalRecords ?? [],
-    socialRecords: loaded.socialRecords ?? [],
-    oaaScores: loaded.oaaScores ?? [],
-    timetable: loaded.timetable ?? [],
-    announcements: loaded.announcements ?? [],
+    preferences: loaded.preferences ?? [],
+    skills: loaded.skills ?? [],
+    tracks: loaded.tracks ?? [],
+    studentSkills: loaded.studentSkills ?? [],
+    practiceLogs: loaded.practiceLogs ?? [],
+    certificates: loaded.certificates ?? [],
+    projects: loaded.projects ?? [],
+    projectTasks: loaded.projectTasks ?? [],
+    projectMembers: loaded.projectMembers ?? [],
+    joinRequests: loaded.joinRequests ?? [],
+    projectIdeas: loaded.projectIdeas ?? [],
     events: loaded.events ?? [],
-    eventRegistrations: loaded.eventRegistrations ?? [],
-    assignments: loaded.assignments ?? [],
-    submissions: loaded.submissions ?? [],
+    eventParticipation: loaded.eventParticipation ?? [],
+    jobs: loaded.jobs ?? [],
+    applications: loaded.applications ?? [],
+    dismissals: loaded.dismissals ?? [],
+    checkins: loaded.checkins ?? [],
+    connections: loaded.connections ?? [],
+    notifications: loaded.notifications ?? [],
+    momentum: loaded.momentum ?? [],
     settings: loaded.settings ?? {
       id: 'singleton',
       academicYear: '2026–27',
-      currentSemester: 5,
-      attendanceThreshold: 75,
-      // Mirrors lib/oaa.ts DEFAULT_WEIGHTS. Only reached by a file written before
-      // settings existed — a fresh seed always carries its own row.
-      oaaWeights: { academic: 1, adaptability: 1, physical: 1, social: 0.5 },
+      erpName: 'College ERP',
+      erpUrl: 'https://erp.college.example',
+      momentumPoints: { ...DEFAULT_POINTS },
+      wellbeingSupport: [],
     },
     auditLogs: loaded.auditLogs ?? [],
   };
 }
 
+/**
+ * A file from an older schema — the ERP-shaped portal this app used to be — is
+ * moved aside, never deleted and never half-read. The caller then seeds a fresh
+ * file. The old one stays on disk next to it, untouched.
+ */
+function setAside(reason: string): void {
+  const stamp = new Date()
+    .toISOString()
+    .replace(/[-:.TZ]/g, '')
+    .slice(0, 14);
+  const backup = DATA_FILE.replace(/\.json$/, '') + `.backup-${stamp}.json`;
+  renameSync(DATA_FILE, backup);
+  console.warn(`[backend] ${reason} Moved it to ${backup} and seeding a fresh one.`);
+}
+
 function readFromDisk(): Database | null {
   if (!existsSync(DATA_FILE)) return null;
 
+  let parsed: Partial<Database>;
   try {
-    return withMissingTables(JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Partial<Database>);
+    parsed = JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Partial<Database>;
   } catch (error) {
     // A corrupt file must not be silently replaced — that would delete real data.
     throw new Error(
       `Data file at ${DATA_FILE} is not valid JSON. Fix or delete it to reseed. (${String(error)})`,
     );
   }
+
+  const version = parsed.meta?.schemaVersion ?? 1;
+  if (version !== SCHEMA_VERSION) {
+    setAside(`Data file is schema ${version}; this build expects ${SCHEMA_VERSION}.`);
+    return null;
+  }
+
+  return withMissingTables(parsed);
 }
 
 async function writeToDisk(snapshot: Database): Promise<void> {
