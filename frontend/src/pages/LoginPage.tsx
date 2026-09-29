@@ -1,48 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { FIELD } from '@/components/ui/Field';
 import { Icon } from '@/components/ui/Icon';
 import { HOME_BY_ROLE, useAuth } from '@/context/AuthContext';
-import { DEMO_LOGINS, OTHER_STUDENT_LOGINS, OTHER_TEACHER_LOGINS } from '@/lib/demoAccounts';
-import { cn } from '@/lib/cn';
-import { ROLE_LABEL } from '@/lib/nav';
+import { DEMO_ACCOUNTS } from '@/lib/demoAccounts';
 import { COLLEGE } from '@/pages/landing/landingData';
-import { ROLES } from '@/types';
-import type { Role } from '@/types';
+import type { User } from '@/types';
 
-function parseRole(value: string | null): Role {
-  return ROLES.includes(value as Role) ? (value as Role) : 'student';
+/** Only same-site paths may be used as a post-login destination. */
+function safeNext(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null;
+  return value;
 }
 
-const ID_LABEL: Record<Role, string> = {
-  student: 'Roll number',
-  teacher: 'Staff ID',
-  admin: 'Admin ID',
-};
-
-const FIELD =
-  'w-full border-b border-ink-300 bg-transparent py-2.5 text-ink-900 transition placeholder:text-ink-400 focus:border-brand-600';
+function destination(user: User, next: string | null): string {
+  if (user.role === 'student' && user.onboarded === false) return '/student/welcome';
+  // A saved destination from the other role's area would only bounce back.
+  if (next && next.startsWith(HOME_BY_ROLE[user.role])) return next;
+  return HOME_BY_ROLE[user.role];
+}
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, status, login } = useAuth();
 
-  const [role, setRole] = useState<Role>(() => parseRole(searchParams.get('role')));
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const expired = searchParams.get('expired') === '1';
-  const next = searchParams.get('next');
-
-  // Keep the tab in sync when the landing page links straight to a role.
-  useEffect(() => setRole(parseRole(searchParams.get('role'))), [searchParams]);
+  const next = safeNext(searchParams.get('next'));
 
   if (status === 'authenticated' && user) {
-    return <Navigate to={next ?? HOME_BY_ROLE[user.role]} replace />;
+    return <Navigate to={destination(user, next)} replace />;
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -51,20 +45,13 @@ export default function LoginPage() {
     setSubmitting(true);
 
     try {
-      const signedIn = await login(loginId, password, role);
-      navigate(next ?? HOME_BY_ROLE[signedIn.role], { replace: true });
+      const signedIn = await login(loginId, password);
+      navigate(destination(signedIn, next), { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+      setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function switchRole(nextRole: Role) {
-    setRole(nextRole);
-    setError(null);
-    setLoginId('');
-    setPassword('');
   }
 
   return (
@@ -80,33 +67,15 @@ export default function LoginPage() {
 
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-4 py-14">
         <Link to="/" className="flex items-baseline gap-2.5 self-center">
-          <span className="font-serif text-2xl text-ink-900">{COLLEGE.short}</span>
-          <span className="kicker text-ink-400">Portal</span>
+          <span className="font-serif text-3xl leading-none text-ink-900">OAA</span>
+          <span className="kicker text-ink-400">for {COLLEGE.short} students</span>
         </Link>
 
         <div className="mt-10 border-t border-ink-300 pt-8">
           <h1 className="font-serif text-3xl text-ink-900">Sign in</h1>
-          <p className="mt-2 text-ink-600">Choose your role, then enter your credentials.</p>
-
-          <div role="tablist" aria-label="Login role" className="mt-8 grid grid-cols-3">
-            {ROLES.map((option) => (
-              <button
-                key={option}
-                type="button"
-                role="tab"
-                aria-selected={role === option}
-                onClick={() => switchRole(option)}
-                className={cn(
-                  'kicker border-b-2 pb-3 transition',
-                  role === option
-                    ? 'border-brand-600 text-ink-900'
-                    : 'border-ink-300 text-ink-500 hover:text-ink-800',
-                )}
-              >
-                {ROLE_LABEL[option] === 'Administrator' ? 'Admin' : ROLE_LABEL[option]}
-              </button>
-            ))}
-          </div>
+          <p className="mt-2 text-ink-600">
+            Use the roll number and password your college gave you.
+          </p>
 
           {expired && (
             <p className="mt-6 border-l-2 border-accent-500 bg-accent-400/10 px-4 py-3 text-sm text-ink-700">
@@ -116,7 +85,7 @@ export default function LoginPage() {
 
           <form className="mt-8" onSubmit={handleSubmit}>
             <label htmlFor="loginId" className="kicker block text-ink-500">
-              {ID_LABEL[role]}
+              Roll number or staff ID
             </label>
             <input
               id="loginId"
@@ -124,9 +93,10 @@ export default function LoginPage() {
               value={loginId}
               onChange={(event) => setLoginId(event.target.value)}
               autoComplete="username"
+              autoCapitalize="characters"
               required
               className={FIELD}
-              placeholder={DEMO_LOGINS[role].loginId}
+              placeholder="22CS001"
             />
 
             <label htmlFor="password" className="kicker mt-7 block text-ink-500">
@@ -155,45 +125,47 @@ export default function LoginPage() {
               disabled={submitting}
               className="kicker mt-9 flex w-full items-center justify-center gap-3 border border-brand-600 bg-brand-600 px-6 py-3.5 text-white transition hover:border-brand-500 hover:bg-brand-500 disabled:opacity-60"
             >
-              {submitting ? 'Signing in…' : `Continue as ${ROLE_LABEL[role].toLowerCase()}`}
+              {submitting ? 'Signing in…' : 'Continue'}
               {!submitting && <Icon name="arrowRight" className="size-4" />}
             </button>
           </form>
 
           {/* Seeded accounts. Remove this block before real accounts are issued. */}
-          <div className="mt-8 border-t border-ink-300 pt-5">
-            <p className="kicker text-ink-500">Seeded account</p>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="font-mono text-sm text-ink-700">
-                {DEMO_LOGINS[role].loginId} / {DEMO_LOGINS[role].password}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginId(DEMO_LOGINS[role].loginId);
-                  setPassword(DEMO_LOGINS[role].password);
-                }}
-                className="kicker text-brand-700 underline underline-offset-4 hover:text-brand-600"
-              >
-                Fill it in
-              </button>
-            </div>
-            {role === 'student' && (
-              <p className="mt-3 text-xs text-ink-500">
-                {OTHER_STUDENT_LOGINS.join(' and ')} use the same password and have different
-                records — {OTHER_STUDENT_LOGINS[0]} is below the 75% attendance threshold.
-              </p>
-            )}
-            {role === 'teacher' && (
-              <p className="mt-3 text-xs text-ink-500">
-                {OTHER_TEACHER_LOGINS[0]} uses the same password and is assigned different subjects
-                — neither teacher can mark the other's classes.
-              </p>
-            )}
+          <div className="mt-10 border-t border-ink-300 pt-5">
+            <p className="kicker text-ink-500">Seeded accounts — click to fill in</p>
+            <ul className="mt-3">
+              {DEMO_ACCOUNTS.map((account) => (
+                <li key={account.loginId}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginId(account.loginId);
+                      setPassword(account.password);
+                      setError(null);
+                    }}
+                    className="group flex w-full items-baseline gap-4 border-b border-ink-200 py-2.5 text-left transition hover:bg-white"
+                  >
+                    <span className="w-20 shrink-0 font-mono text-sm text-ink-800">
+                      {account.loginId}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm text-ink-900 group-hover:text-brand-700">
+                        {account.who}
+                      </span>
+                      <span className="block text-xs text-ink-500">{account.note}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-ink-500">
+              Every student password is <span className="font-mono">student123</span>; the
+              moderator’s is <span className="font-mono">admin123</span>.
+            </p>
           </div>
 
           <p className="mt-8 text-sm text-ink-500">
-            Accounts are created by the college administrator. There is no public sign-up.
+            Accounts come from your college’s records. There is no public sign-up.
           </p>
         </div>
 
@@ -201,7 +173,7 @@ export default function LoginPage() {
           to="/"
           className="kicker mt-10 self-center text-ink-500 transition hover:text-ink-900"
         >
-          ← Back to the website
+          ← Back to the home page
         </Link>
       </div>
     </div>

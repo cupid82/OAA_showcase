@@ -11,16 +11,17 @@ type AuthStatus = 'loading' | 'authenticated' | 'anonymous';
 interface AuthContextValue {
   user: User | null;
   status: AuthStatus;
-  login: (loginId: string, password: string, role: Role) => Promise<User>;
+  login: (loginId: string, password: string) => Promise<User>;
   logout: () => void;
+  /** Re-reads the account — after onboarding, `onboarded` changes. */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** Where a role lands after logging in, and what its ProtectedRoute falls back to. */
+/** Where a role lands after signing in, and what its ProtectedRoute falls back to. */
 export const HOME_BY_ROLE: Record<Role, string> = {
   student: '/student',
-  teacher: '/teacher',
   admin: '/admin',
 };
 
@@ -28,11 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
 
-  // Restore the session on refresh. The cached user only paints the first frame —
-  // the server's answer is authoritative and overwrites it.
+  const refresh = useCallback(async () => {
+    const { data } = await api.get<{ data: User }>('/api/auth/me');
+    localStorage.setItem(USER_KEY, JSON.stringify(data));
+    setUser(data);
+    setStatus('authenticated');
+  }, []);
+
+  // Restore the session on refresh. The server's answer is authoritative.
   useEffect(() => {
-    const token = tokenStore.get();
-    if (!token) {
+    if (!tokenStore.get()) {
       setStatus('anonymous');
       return;
     }
@@ -60,12 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (loginId: string, password: string, role: Role) => {
+  const login = useCallback(async (loginId: string, password: string) => {
     // skipAuthRedirect: a 401 here means "wrong password", not "session expired" —
     // without it the login page would redirect to itself.
     const { data } = await api.post<{ data: AuthSession }>(
       '/api/auth/login',
-      { loginId, password, role },
+      { loginId, password },
       { skipAuthRedirect: true },
     );
 
@@ -86,8 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, login, logout }),
-    [user, status, login, logout],
+    () => ({ user, status, login, logout, refresh }),
+    [user, status, login, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

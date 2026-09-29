@@ -1,107 +1,125 @@
-# CLAUDE.md — Smart Student Management Portal (OAA)
+# CLAUDE.md — OAA
 
 ## What this is
 
-College portal with three roles: Student, Teacher, Admin.
-The signature feature is the **OAA score** (Overall Ability Assessment).
-Full specs in `docs/`. The build order is in `plans.md`.
+OAA is a **student skills-and-opportunity platform**, not a college ERP. Students
+build projects, grow and prove skills, find events and jobs, keep a private eye on
+burnout, and earn momentum on an opt-in leaderboard. The college ERP stays the
+system of record for marks, attendance, fees and timetables — OAA never copies
+those; it links out ("Open College ERP").
+
+Product direction: `idea md/OAA_Product_Direction_and_Change_Plan.md` (the owner's
+notes, not committed). The owner's own words for the shape: _home page → sign in →
+dashboard; modes on the left: Projects, Skills, Events, Jobs, Burnout, Leaderboard;
+connect apps like GitHub, X, LinkedIn._
+
+`plans.md`, `PLAYBOOK.md` and `docs/01–08` describe the **retired** ERP-style portal
+(teachers, marks, attendance, the four-dimension OAA score). Read them as history,
+not as specs.
 
 ## Stack — decided, do not change without asking
 
 - Monorepo: npm workspaces (`frontend/`, `backend/`)
 - Backend: Express 4 + TypeScript, **ESM** — relative imports MUST end in `.js`
-- Frontend: React 18 + Vite 6 + TypeScript + Tailwind + React Router
+- Frontend: React 18 + Vite 6 + TypeScript + Tailwind v4 + React Router
 - Persistence: **a JSON file, not a database.** Owner's decision — do not add
   Postgres, Prisma, SQLite or any other DB without asking.
 - Auth: JWT + bcrypt + role-based access control
 - Charts: Recharts
 - Validation: zod (already a dependency — use it, don't add another)
 
-## Current state — read before planning anything
+## Current state
 
-Steps 0, 3, 4, 5, 6, 7 and 8 of `plans.md` are done. Step 1 was replaced by the
-JSON store below; Step 2 (auth API) is built. Steps 10–14 are **half done** — the
-student read side of all five is live, the staff write side is not. Step 9 (admin
-console) is next, and it is the biggest remaining gap: `/admin/*` is entirely
-`ComingSoon`.
+Everything in the sidebar is built — there are no placeholder pages.
 
+- **Roles:** `student` and `admin` (labelled "Moderator"). The teacher role and
+  every ERP screen (marks, attendance, timetable, assignments, announcements) were
+  removed on purpose. One login form; the account decides the role.
+- **Student app** (`/student/*`): Dashboard ("Today"), Projects, Skills, Events,
+  Jobs, Burnout, Leaderboard, Connected apps, Settings, plus onboarding at
+  `/student/welcome` (an `OnboardingGate` sends un-onboarded students there).
+- **Public:** `/` home page, `/login`, and `/p/:handle` public portfolios.
+- **Moderator** (`/admin/*`): overview (counts only), events and jobs — publish,
+  edit, and review student-shared listings.
 - **Persistence is `backend/data/oaa-data.json`** — gitignored, seeded on first
-  run, loaded by `backend/src/data/store.ts`. Delete the file to reseed.
-  `store.ts` is the single seam: swapping in a real database touches that file
-  and the service queries, nothing above them.
-- **Auth is real.** `POST /api/auth/login` and `GET /api/auth/me`, bcrypt cost 10,
-  JWT in `localStorage`. `mockAuth.ts` is gone; do not reintroduce it.
-- **Live student pages:** `/student/profile`, `/student/marks`,
-  `/student/attendance`, all reading `GET /api/students/me[/marks|/attendance]`.
-- **Live teacher pages:** `/teacher` (real dashboard), `/teacher/classes`,
-  `/teacher/attendance`, `/teacher/marks`, `/teacher/students`,
-  `/teacher/students/:studentId` and `/teacher/assessments`. Backed by
-  `/api/teachers/*`, `/api/attendance/*` and `/api/marks/*`.
-- **The OAA feature is live:** `/student/oaa` reads `GET /api/students/me/oaa`.
-  See the OAA section below and `docs/07-oaa-spec.md`.
-- **Every student sidebar item is built.** Leaderboard, timetable, announcements,
-  events and assignments each read `GET /api/students/me/*` and are served from
-  seeded rows — none of them hold hardcoded arrays.
-- **The seed carries 10 students.** `22CS007` deliberately has no physical
-  records — that is the missing-data rule visible in the running app, not just in
-  a test. Don't "fix" it.
-- Everything else is routed but unbuilt and renders `ComingSoon`.
-- Do **not** spread mock data anywhere. A feature page that needs data it cannot
-  get yet stays empty until its backend step.
+  run by `data/seed.ts` with dates **relative to the day it seeds**. Delete it to
+  reseed. `meta.schemaVersion` (`SCHEMA_VERSION` in `data/types.ts`) guards the
+  shape: a file from another schema is renamed to `*.backup-<stamp>.json`, never
+  deleted, and a fresh one is seeded. Bump the version when you reshape a table.
+- **GitHub sync is real**: `lib/github.ts` calls GitHub's public REST API, only
+  when a student presses Sync. `GITHUB_TOKEN` (optional, no scopes) raises the
+  60-requests-an-hour limit. Every other provider is a stored link, never called.
 
-### The teacher authorisation model (Step 6)
+### Seeded demo states — deliberate, don't "fix" them
 
-A **class** is one `(subject, section)` pair, listed in the `teacherAssignments`
-table. It is the only unit of authority in the write path:
+Passwords: every student `student123`, moderator `ADM01` / `admin123`.
 
-- `assertOwnsClass` in `teacher.service.ts` is the single check. Every write goes
-  through it — a subject id sent by the client can never widen what a teacher
-  may touch, and the class picker in the UI is built from the same list.
-- Two teachers are seeded on purpose (`TCH01` owns CS501–503, `TCH02` owns
-  CS504–505), so that a check which passes for everything is visibly broken.
-- Attendance is editable from 30 days back (`ATTENDANCE_BACKDATE_DAYS`) to today,
-  never into the future.
-- A repeat bulk submission for the same `(subject, section, date)` is a **409**,
-  checked before anything is written — a partially-applied batch is impossible.
-- Every teacher write appends to `auditLogs` via `recordAudit`. The table is
-  append-only; a correction is a new row, never an edit.
+- `22CS001` Ananya — the main demo account; GitHub deliberately **not** linked.
+- `22CS002` Rohan — overloaded; Burnout reads "running hot" and Today goes quiet.
+- `22CS006` Karthik — chose to stay off the leaderboard.
+- `22CS007` Sneha — has **never** checked in: Burnout says "not enough data",
+  never "steady". Not-measured is not the same as fine.
+- `22CS010` Arjun — not onboarded; lands on the welcome flow.
 
-## Existing patterns — REUSE, never reinvent
+## Architecture — REUSE, never reinvent
 
-- `backend/src/lib/asyncHandler.ts` — wrap every async route handler
-- `backend/src/lib/httpError.ts` — throw `HttpError.notFound()`, `.forbidden()`, etc.
-- `backend/src/middleware/errorHandler.ts` — already converts ZodError → 400. Do not
-  add try/catch in routes for validation.
-- `backend/src/config/env.ts` — all env vars go through this zod schema. Never read
-  `process.env` directly anywhere else.
-- `backend/src/middleware/requireAuth.ts` — `requireAuth`, `requireRole`,
-  `requireSelfOrStaff`. Guard every new protected route with these; never
-  hand-roll an ownership check in a handler.
-- `backend/src/lib/grading.ts` — grade bands, grade points, credit-weighted means
-- `backend/src/services/audit.service.ts` — `recordAudit` for every staff write
-- `frontend/src/lib/api.ts` — the only place `fetch` is called
-- `frontend/src/lib/useApi.ts` — the loading / error / data hook every page uses
-- `frontend/src/pages/teacher/useClassSelection.ts` — the teacher's class picker
-  state, kept in the query string so a class survives a reload or a deep link
 - Route file → service file → store. Routes never touch `getDb()` directly.
+- `lib/asyncHandler.ts` — wrap every async route handler.
+- `lib/httpError.ts` — throw `HttpError.notFound()`, `.forbidden()`, etc.
+- `lib/params.ts` — `param(req, 'id')`, a route param narrowed to a string.
+- `middleware/errorHandler.ts` — converts ZodError → 400. No try/catch in routes.
+- `config/env.ts` — every env var goes through this zod schema.
+- `middleware/requireAuth.ts` — `requireAuth` (role read from the account, not
+  trusted from the token), `requireRole`, and `requireStudent`, which resolves
+  the caller's **own** student id from the token. Student routes never take a
+  student id from the URL.
+- Each router is mounted at its own prefix in `app.ts`. A router with a
+  router-level guard mounted at bare `/api` also runs for every route after it.
+- `services/shared.ts` — ids, lookups, catalogue checks, dismissals, labels.
+- `services/evidence.ts` — gathers a student's rows for the pure engines. Takes
+  the db explicitly so the seed runs the same code the API does.
+- `services/audit.service.ts` — `recordAudit` for every moderation write;
+  append-only.
+- `frontend/src/lib/api.ts` — the only place `fetch` is called.
+- `frontend/src/lib/useApi.ts` — loading / error / data. **Stale-while-revalidate:**
+  a reload of the same path keeps data on screen; `setData` takes a mutation's
+  response. (The old hook blanked data on refetch, which unmounted "saved" notices.)
+- `frontend/src/lib/useAction.ts` — pending/error for writes; `run()` resolves to
+  the result or `undefined` on failure.
+- `frontend/src/lib/useShared.ts` — cached catalogue (`useCatalog`) and site meta.
+- `frontend/src/lib/labels.ts` — every enum in UI words. `lib/format.ts` — dates.
 
-### The OAA engine (Steps 7 and 8)
+### Access, in one function per module
 
-- `backend/src/lib/oaa.ts` is **pure** — numbers in, numbers out, no store access.
-  That is what makes it testable without fixtures. Keep it that way: anything
-  needing rows belongs in `oaa.service.ts`.
-- **Tests come before UI here.** A wrong chart is obvious; a wrong score quietly
-  ranks the wrong student first. 33 tests in `oaa.test.ts` — run them after any
-  change to the formula, the bands or the dimension mappings.
-- **Recompute on write, never on read.** `getOaa` serves the stored `oaaScores`
-  row. Every write to an input calls `recomputeStudent`.
-- **The weights live in `settings`, never in code.** `DEFAULT_WEIGHTS` is the
-  seed's starting value and the tests' fixture — not a fallback the service reads.
-- **`null` means "not measured" and is never rendered as 0**, in a number or a
-  chart. The missing dimension is dropped and the divisor renormalised; the API
-  returns `measured` / `missing` so the UI can say which.
-- Values marked ⚠️ in `docs/07-oaa-spec.md` are invented placeholders standing in
-  for college regulations. Treat them as provisional.
+- Projects: `assertProjectAccess(studentId, projectId, 'view' | 'team' | 'owner')`
+  in `project.service.ts`. A private project someone else owns is a **404**, not
+  a 403 — its existence is private too.
+- Events/jobs: published for everyone; pending/rejected only for the sharer.
+- Admins get **counts, never rows about a person**. The wellbeing split on the
+  overview is withheld below `AGGREGATION_THRESHOLD` (5) students.
+
+## The pure engines — tests before UI
+
+`lib/skillProof.ts`, `lib/momentum.ts`, `lib/matching.ts`, `lib/burnout.ts` and
+`lib/dates.ts` are **pure**: numbers in, numbers out, no store access. 39 tests in
+`lib/engines.test.ts` — run `npm test` after touching any of them.
+
+- **Skill proof** is separate from the student's self-declared level. Proven =
+  a shipped project that tells its story (problem ≥ 20 chars + ≥ 1 skill) or a
+  certificate. Practising = a building project, an attended event's reflection
+  skills, or ≥ 60 min practice in 30 days. Claimed = listed, nothing behind it.
+- **Momentum** (the leaderboard): stored ledger, **recomputed on write, never on
+  read** — every write to an input calls `recomputeMomentum(...)`. Point values
+  live in `settings.momentumPoints`; `DEFAULT_POINTS` is only the seed/test value.
+  Never counted: marks, attendance, job applications. Practice caps per week;
+  milestones cap per project.
+- **Leaderboard is opt-in.** Hidden students are left out entirely, not
+  anonymised; a hidden viewer sees where they would rank.
+- **Matching** explains itself (`describeMatch` → reasons, have, gap). The score
+  orders lists; the UI shows a word ("Strong fit"), never a grade.
+- **Burnout**: fewer than two check-ins in four weeks → `level: null`, shown as
+  "not enough data". Computed on read (deadlines move daily; nobody ranks on it).
+  Private to the student; `at-risk` or a snooze puts Today into focus mode.
 
 ## Non-negotiable rules
 
@@ -109,53 +127,52 @@ table. It is the only unit of authority in the write path:
 2. **Never store a plaintext password.** bcrypt, cost 10+.
 3. **Never build SQL by string concatenation.** If a real database is ever added,
    it is Prisma or parameterized queries only.
-4. **Every protected route checks role AND ownership.** A student requesting
-   `/api/students/42/marks` must be verified as student 42, not just "a student".
-5. **Validate every request body with a zod schema** in the model file.
+4. **Every protected route checks role AND ownership** — via the guards above and
+   the one access function per module. Never hand-roll it in a handler.
+5. **Validate every request body with a zod schema** in `models/`.
 6. **Never commit `.env`.** Secrets go in `.env`, placeholders in `.env.example`.
 7. **API responses are always** `{ data: ... }` **or** `{ error: { message } }`.
 
-## Domain rules
+## Product rules
 
-- OAA = (Academic + Adaptability + Physical + 0.5 × Social) / 3.5 → range 0–100
-- Round to nearest integer BEFORE grade lookup (95.4 → 95 → A; 95.6 → 96 → A+)
-- A dimension with no records is dropped and the divisor renormalised — never
-  scored as 0, and never filled in from the cohort average
-- Attendance is one row per student, per subject, per DATE. Never a running counter.
-- OAA, CGPA, and attendance % are DERIVED. Never hand-edit them as stored columns.
-- Teacher-assigned scores (Adaptability, Social) must write an `audit_logs` row.
+- Not an ERP. No marks, attendance, fees or timetables — link to the ERP instead,
+  and label ERP-derived fields with their source and sync time.
+- Nothing public by default: projects start private; leaderboard and portfolio
+  are off until switched on; nothing is published automatically.
+- Every Today item answers **why, what, by when**, and can be dismissed.
+- A listing never says "verified" — it says who posted it: college-posted,
+  partner-posted, student-shared (moderator-checked), unverified external link.
+- Consent before linking an account; nothing fetched until the student syncs.
+- `null` means "not measured" and is never rendered as 0.
+- Values marked ⚠️ in the code (support contacts, the ERP URL) are placeholders.
 
 ## Frontend conventions
 
-- Tailwind v4 — configured in `frontend/src/styles/global.css` via `@theme`.
-  Brand tokens are `brand-*` / `ink-*`; use them instead of raw hex.
-- Three typefaces, self-hosted via `@fontsource` (no CDN, works offline, no
-  third-party request on a student's behalf): **Newsreader** for headings and
-  every figure, **Inter** for body and tables, **IBM Plex Mono** for the `kicker`
-  and for codes. Use `font-serif` / `font-sans` / `font-mono`, never a raw family.
-- Path alias `@` → `frontend/src`. Prefer `@/components/...` over `../../`.
-- Route groups: public (`/`, `/login`), `/student/*`, `/teacher/*`, `/admin/*`.
-  Every non-public route sits inside `<ProtectedRoute>`.
-- Shared UI lives in `frontend/src/components/ui/` — `Loading`, `ErrorMessage`,
-  `EmptyState`, `Button`. Use them rather than writing another spinner.
-- Chart colours come from `pages/student/oaa/chartTokens.ts`, and each one was
-  checked with a contrast validator rather than picked by eye — the measured
-  ratios are in the comments. Marks need ≥3:1 on the white card; axis text needs
-  ≥4.5:1. Gridlines are the exception: recessive by design.
-- A page that saves shows the outcome. Two ways that gets silently broken, both
-  hit during Steps 6–8:
-  1. Clearing the notice inside the effect that reruns on refetch — the refetch is
-     what follows a save, so it deletes the message it was meant to confirm.
-  2. Holding the notice in a component that the refetch unmounts. `useApi` blanks
-     `data` while refetching, so anything rendered under `{data && …}` is torn
-     down. Lift the notice above that boundary.
+- Keep the design language: square corners, hairline `ink` borders, the mono
+  `kicker` label, **Newsreader** (`font-serif`) for headings and every figure,
+  **Inter** for body, **IBM Plex Mono** for kickers and codes. Brand tokens
+  `brand-*` / `ink-*` / `accent-*` in `styles/global.css`; accent (clay) is for
+  warnings only. The dark "plate" (`drafting bg-ink-950`) is for one hero per page.
+- Shared UI in `components/ui/`: `Button`/`ButtonLink`, `Badge`, `Field` (+
+  `TextInput`, `TextArea`, `Select`, `Checkbox`), `Tabs`/`Chip`, `Notice`,
+  `Bits` (`SectionHeading`, `ProgressBar`, `DatePlate`, `Stat`, `SkillChips`,
+  `ExternalLink`), `SkillPicker`, `ProviderMark`, `ConfirmButton`, `EmptyState`,
+  `ErrorMessage`, `Loading`, `PageHeader`. Use them rather than writing another.
+- Chart colours come from `lib/chartTokens.ts`, each contrast-checked (ratios in
+  the comments). Marks ≥ 3:1 on their surface; axis text ≥ 4.5:1.
+- Path alias `@` → `frontend/src`.
+- A page that saves shows the outcome, held **above** anything that re-renders.
+- `useEffect` bodies are always blocks. Newer browsers return a Promise from
+  `scrollTo`/`scrollIntoView`; an arrow that returns it crashes React's cleanup.
+- Scrolls on arrival use `behavior: 'instant'` — the site's smooth scrolling is
+  for in-page anchors only.
 
 ## Commands
 
-- `npm run dev` — both servers
+- `npm run dev` — both servers (backend :4000, frontend :5173)
 - `npm run typecheck` — must pass before any commit
-- `npm test` — backend tests
-- `npm run format` — prettier
+- `npm test` — backend engine tests
+- `npm run format` — prettier (CI runs `format:check`)
 
 ## Before you finish any task
 

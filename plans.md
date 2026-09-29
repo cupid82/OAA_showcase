@@ -1,5 +1,12 @@
 # 🏗️ OAA Portal — Step-by-Step Build Guide
 
+> [!warning] Superseded
+> This guide built the **ERP-style portal** (teachers, marks, attendance, timetable,
+> the four-dimension OAA score). That product was retired in the skills-platform
+> rebuild: OAA is now a student skills-and-opportunity platform that sits beside the
+> college ERP instead of copying it. See `CLAUDE.md` and `README.md` for what exists
+> now. Kept for history only — do not follow the steps below.
+
 > Smart Student Management Portal · Built in VS Code with Claude Code
 > Location: `D:\OAA`
 

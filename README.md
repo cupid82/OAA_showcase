@@ -1,107 +1,153 @@
 # OAA
 
-Full-stack web app starter.
+A student skills-and-opportunity platform. Students build projects, grow and prove
+skills, find events and jobs, keep a private eye on burnout, and earn momentum on an
+opt-in leaderboard. It sits **beside** the college ERP rather than copying it: marks,
+attendance and fees stay in the ERP, and OAA links out to it.
 
-| Layer    | Stack                             | Dev URL               |
-| -------- | --------------------------------- | --------------------- |
-| Frontend | React 18 + TypeScript + Vite      | http://localhost:5173 |
-| Backend  | Node + Express + TypeScript (ESM) | http://localhost:4000 |
+| Layer    | Stack                                         | Dev URL               |
+| -------- | --------------------------------------------- | --------------------- |
+| Frontend | React 18 + TypeScript + Vite + Tailwind v4    | http://localhost:5173 |
+| Backend  | Node + Express + TypeScript (ESM), JSON store | http://localhost:4000 |
 
 ## Getting started
 
 ```bash
 npm install                 # installs both workspaces
-cp .env.example .env         # then fill in values
+cp .env.example .env         # then fill in values (JWT_SECRET is required)
 npm run dev                  # runs backend + frontend together
 ```
 
-Open http://localhost:5173. The Vite dev server proxies `/api/*` to the backend, so
-there are no CORS issues in development.
+Open http://localhost:5173 — home page, then **Sign in**. The login page lists the
+seeded accounts; click one to fill it in.
+
+| Login     | Password     | What it shows                                              |
+| --------- | ------------ | ---------------------------------------------------------- |
+| `22CS001` | `student123` | The main demo student. GitHub not linked — try your own.   |
+| `22CS002` | `student123` | Overloaded: Burnout reads "running hot", Today goes quiet. |
+| `22CS010` | `student123` | First sign-in: lands on onboarding.                        |
+| `ADM01`   | `admin123`   | Moderator: publish and review events and jobs.             |
+
+## What's in it
+
+**Student** — a dashboard ("Today": the next few moves, each with why / what / by
+when), and six modes down the left:
+
+- **Projects** — tell each project's story, break it into milestones, ship it; find a
+  team; start from curated ideas; import repositories from GitHub.
+- **Skills** — a skill map for the chosen goal; proof (shipped work, certificates)
+  kept separate from self-declared level; practice log; certificates.
+- **Events** — hackathons, workshops, contests, talks; save, register, reflect after.
+- **Jobs** — internships, jobs, fellowships, campus drives; matches that explain
+  themselves, skill gaps included; a private application tracker.
+- **Burnout** — a private weekly check-in read against the fortnight ahead; quiet mode.
+- **Leaderboard** — opt-in momentum from building, learning and showing up. Never marks.
+
+Plus **Connected apps** (GitHub sync; LinkedIn, X, LeetCode, Codeforces, Kaggle,
+Behance and a website as portfolio links), **Settings**, and a public portfolio at
+`/p/<handle>` that shows only what the student switched on.
+
+**Moderator** — an overview of counts (never an individual's data), and the events
+and jobs lists with a review queue for student-shared listings.
 
 ## Layout
 
 ```
 .
-├── frontend/               # React SPA
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── src/
-│       ├── main.tsx        # entry point
-│       ├── App.tsx         # root component
-│       ├── components/     # UI components
-│       ├── lib/api.ts      # fetch wrapper for the backend
-│       ├── styles/         # global CSS
-│       └── types.ts        # shared client types
-├── backend/                # REST API
-│   └── src/
-│       ├── server.ts       # http listener + graceful shutdown
-│       ├── app.ts          # express app, middleware, route mounting
-│       ├── config/env.ts   # validated environment variables
-│       ├── routes/         # HTTP layer
-│       ├── services/       # business logic (swap for real DB here)
-│       ├── models/         # zod schemas + types
-│       ├── middleware/     # error handling, 404
-│       └── lib/            # HttpError, asyncHandler
-├── docker-compose.yml      # optional: run both + Postgres
-└── .github/workflows/ci.yml
+├── frontend/src/
+│   ├── App.tsx                 # every route
+│   ├── components/             # layout (Navbar, Sidebar, NotificationBell) and ui/
+│   ├── lib/                    # api, useApi, useAction, labels, format, chartTokens
+│   ├── pages/landing/          # public home page
+│   ├── pages/student/          # dashboard, onboarding, projects/, skills/,
+│   │                           # opportunities/ (events + jobs), burnout/, …
+│   ├── pages/admin/            # moderator console
+│   └── pages/portfolio/        # public /p/:handle
+└── backend/src/
+    ├── lib/                    # pure engines (skillProof, momentum, matching,
+    │                           # burnout, dates) + github client + helpers
+    ├── data/                   # types, catalogue, seed, JSON store
+    ├── services/               # the rules — one module per area
+    ├── models/                 # zod request schemas
+    ├── routes/                 # thin HTTP layer
+    └── middleware/             # auth guards, errors
 ```
 
 ## Scripts
 
-Run from the repo root:
-
-| Command             | What it does                           |
-| ------------------- | -------------------------------------- |
-| `npm run dev`       | Backend and frontend in watch mode     |
-| `npm run build`     | Type-checks and builds both workspaces |
-| `npm start`         | Runs the built backend                 |
-| `npm run typecheck` | Type-checks without emitting           |
-| `npm run format`    | Prettier over the repo                 |
-
-Target a single workspace with `npm run <script> --workspace=backend`.
+| Command             | What it does                                            |
+| ------------------- | ------------------------------------------------------- |
+| `npm run dev`       | Backend and frontend in watch mode                      |
+| `npm run build`     | Type-checks and builds both workspaces                  |
+| `npm start`         | Runs the built backend                                  |
+| `npm run typecheck` | Type-checks without emitting                            |
+| `npm test`          | Engine tests (skill proof, momentum, matching, burnout) |
+| `npm run format`    | Prettier over the repo                                  |
 
 ## API
 
-| Method  | Path                                             | Who        | Description                              |
-| ------- | ------------------------------------------------ | ---------- | ---------------------------------------- |
-| `GET`   | `/api/health`                                    | anyone     | Health check                             |
-| `POST`  | `/api/auth/login`                                | anyone     | Sign in, returns a JWT                   |
-| `GET`   | `/api/auth/me`                                   | signed in  | The current user                         |
-| `GET`   | `/api/students/:id`                              | self/staff | Profile (`me` for the signed-in student) |
-| `GET`   | `/api/students/:id/marks`                        | self/staff | Marks by semester, with SGPA and CGPA    |
-| `GET`   | `/api/students/:id/attendance`                   | self/staff | Percentages, monthly trend, absences     |
-| `GET`   | `/api/students/:id/oaa`                          | self/staff | Ability score, breakdown, trend          |
-| `GET`   | `/api/students/:id/leaderboard?scope=&category=` | self/staff | Rankings, with the viewer's own row      |
-| `GET`   | `/api/students/:id/timetable`                    | self/staff | Weekly grid for their section            |
-| `GET`   | `/api/students/:id/announcements`                | self/staff | Notices addressed to them                |
-| `GET`   | `/api/students/:id/events`                       | self/staff | Events with their registration state     |
-| `GET`   | `/api/students/:id/assignments`                  | self/staff | Assignments with submission and grade    |
-| `GET`   | `/api/teachers/me`                               | teacher    | Dashboard summary                        |
-| `GET`   | `/api/teachers/me/classes`                       | teacher    | Assigned subject + section pairs         |
-| `GET`   | `/api/teachers/students`                         | teacher    | Search within their own classes          |
-| `GET`   | `/api/attendance?subjectId=&section=&date=`      | teacher    | Class roster for a date                  |
-| `POST`  | `/api/attendance/bulk`                           | teacher    | Mark a whole class — `409` if repeated   |
-| `PATCH` | `/api/attendance/:id`                            | teacher    | Correct one record, writes an audit row  |
-| `GET`   | `/api/marks?subjectId=&section=`                 | teacher    | Marks grid for a class                   |
-| `POST`  | `/api/marks`                                     | teacher    | First entry for a student and subject    |
-| `PATCH` | `/api/marks/:id`                                 | teacher    | Update an entry, writes an audit row     |
-| `GET`   | `/api/teachers/assessments?semester=`            | teacher    | Roster with each student's rating        |
-| `POST`  | `/api/teachers/assessments/adaptability`         | teacher    | Rate all seven criteria, recomputes OAA  |
-| `POST`  | `/api/teachers/records/social`                   | teacher    | Add a social record, recomputes OAA      |
+Responses are `{ "data": ... }` on success and `{ "error": { "message": ... } }` on
+failure. Student routes never take a student id — the caller's own record comes from
+their token.
 
-Responses are `{ "data": ... }` on success and `{ "error": { "message": ... } }` on failure.
+| Method                  | Path                                            | Who             | Description                                               |
+| ----------------------- | ----------------------------------------------- | --------------- | --------------------------------------------------------- |
+| `POST`                  | `/api/auth/login`                               | anyone          | `{ loginId, password }` → JWT; role from the account      |
+| `GET`                   | `/api/auth/me`                                  | signed in       | The current user                                          |
+| `GET`                   | `/api/meta`                                     | anyone          | ERP link and academic year                                |
+| `GET`                   | `/api/portfolio/:handle`                        | anyone          | A public portfolio, if switched on                        |
+| `GET`                   | `/api/catalog`                                  | signed in       | Skills and goals                                          |
+| `GET` `PATCH`           | `/api/me`, `/api/me/{profile,goal,preferences}` | student         | Account, goal, privacy and notifications                  |
+| `POST`                  | `/api/me/onboarding`                            | student         | Goal, skills, interests, privacy, links — atomically      |
+| `GET`                   | `/api/dashboard`                                | student         | Today: next moves, stats, upcoming                        |
+| `POST`                  | `/api/dashboard/{dismiss,restore}`              | student         | "Not now" on a Today card, and undo                       |
+| `GET` `POST`            | `/api/skills`                                   | student         | Skill map, list a skill                                   |
+| `GET` `PATCH` `DELETE`  | `/api/skills/:skillId`                          | student         | One skill: evidence, openings, level                      |
+| `POST`                  | `/api/skills/:skillId/practice`                 | student         | Log practice                                              |
+| `POST` `DELETE`         | `/api/skills/certificates[/:id]`                | student         | Certificates                                              |
+| `GET` `POST`            | `/api/projects`                                 | student         | Your projects, create one                                 |
+| `GET`                   | `/api/projects/{discover,ideas}`                | student         | Projects looking for help; curated ideas                  |
+| `POST`                  | `/api/projects/ideas/:ideaId/start`             | student         | Start a project from an idea                              |
+| `GET` `PATCH` `DELETE`  | `/api/projects/:projectId`                      | per project     | View (campus/public or team), edit (owner)                |
+| `POST` `PATCH` `DELETE` | `/api/projects/:projectId/tasks[/:taskId]`      | team            | Milestones                                                |
+| `POST` `PATCH`          | `/api/projects/:projectId/join-requests[/:id]`  | student / owner | Ask to join; accept or decline                            |
+| `DELETE`                | `/api/projects/:projectId/members/:studentId`   | owner / self    | Remove a member, or leave                                 |
+| `GET` `POST`            | `/api/events`                                   | student         | Events overview; share one for review                     |
+| `GET`                   | `/api/events/:eventId`                          | student         | One event, with why it fits                               |
+| `PUT`                   | `/api/events/:eventId/{participation,interest}` | student         | Save / registered / attended + reflection; not interested |
+| `GET` `POST`            | `/api/jobs`                                     | student         | Pipeline, suggestions, open listings; share one           |
+| `GET`                   | `/api/jobs/:jobId`                              | student         | One listing, with fit and gap                             |
+| `PUT`                   | `/api/jobs/:jobId/{application,interest}`       | student         | Private tracker; not interested                           |
+| `GET`                   | `/api/wellbeing`                                | student         | Burnout reading, check-ins, commitments                   |
+| `POST` `DELETE`         | `/api/wellbeing/checkins`                       | student         | This week's check-in; delete all                          |
+| `PUT`                   | `/api/wellbeing/snooze`                         | student         | Quiet mode                                                |
+| `GET`                   | `/api/leaderboard?window=&category=&scope=`     | student         | Opt-in momentum rankings                                  |
+| `GET`                   | `/api/connections`                              | student         | Connected apps                                            |
+| `PUT` `PATCH` `DELETE`  | `/api/connections/:provider`                    | student         | Link (with consent), show on portfolio, unlink            |
+| `POST`                  | `/api/connections/github/sync`                  | student         | Read the public GitHub profile and repos                  |
+| `GET` `POST`            | `/api/connections/github/{repos,import}`        | student         | Import repositories as projects                           |
+| `GET` `POST` `PATCH`    | `/api/notifications[/read-all\|/:id]`           | signed in       | The in-app inbox                                          |
+| `GET`                   | `/api/admin/overview`                           | admin           | Counts only                                               |
+| `GET` `POST` `PUT`      | `/api/admin/{events,jobs}[/:id]`                | admin           | Publish and edit listings                                 |
+| `POST`                  | `/api/admin/{events,jobs}/:id/review`           | admin           | Approve, reject (with a note), archive, restore           |
 
 ## Data
 
-There is no database server. The backend persists to a single JSON document at
-`backend/data/oaa-data.json` — gitignored, seeded on first run, loaded by
-`backend/src/data/store.ts`. Delete the file to reseed.
+There is no database server. The backend persists to `backend/data/oaa-data.json` —
+gitignored, seeded on first run with dates relative to that day. **Delete the file to
+reseed.** A data file written by a different schema version is moved aside to
+`oaa-data.backup-<timestamp>.json` (never deleted) and a fresh one is seeded.
 
-`store.ts` is the seam: routes call services, services call the store, so replacing it
-with a real database touches that file and the service queries and nothing above them.
-`docker-compose.yml` includes a Postgres service if you want one locally.
+`store.ts` is the seam: routes call services, services call the store, so replacing
+it with a real database touches that file and the service queries and nothing above.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` in each workspace. Only `VITE_`-prefixed variables reach the
-browser — never put secrets in `frontend/.env`.
+Copy `.env.example` to `.env` in each workspace. Only `VITE_`-prefixed variables reach
+the browser — never put secrets in `frontend/.env`.
+
+| Variable       | Where   | Notes                                                   |
+| -------------- | ------- | ------------------------------------------------------- |
+| `JWT_SECRET`   | backend | Required, 32+ characters                                |
+| `GITHUB_TOKEN` | backend | Optional. A no-scope token lifts GitHub's 60/hour limit |
+| `DATA_FILE`    | backend | JSON store path, default `data/oaa-data.json`           |

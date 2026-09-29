@@ -1,103 +1,69 @@
 /**
- * The persistence layer — a single JSON document on disk.
+ * The persistence seam.
  *
- * This project intentionally runs without a database server. The store keeps the
- * whole dataset in memory and writes it back atomically (temp file + rename) so a
- * crash mid-write cannot truncate the file.
+ * The store keeps the whole dataset in memory; services read and change it through
+ * `getDb()` and call `persist()` after a write. Where the data lives between
+ * restarts is decided once, here:
  *
- * Everything above this file talks to services, and services talk to `getDb()`.
- * Nothing else reads or writes the JSON. That is the seam: replacing this file
- * with Prisma leaves routes and pages untouched.
+ * - **Supabase Postgres** when `SUPABASE_DB_URL` is set — the real deployment.
+ * - **A JSON file** otherwise — for tests, CI and working offline.
+ *
+ * Nothing above this file knows which one is in use. That is the seam: routes and
+ * pages were untouched when Postgres was added.
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { env } from '../config/env.js';
+import { createFileStore } from './fileStore.js';
+import type { Persistence } from './persistence.js';
+import { createPostgresStore } from './postgresStore.js';
 import { buildSeed } from './seed.js';
 import type { Database } from './types.js';
 
 const DATA_FILE = path.resolve(process.cwd(), env.DATA_FILE);
 
 let db: Database | null = null;
+let persistence: Persistence | null = null;
 
-/** Serialises concurrent `persist()` calls so two writers cannot interleave. */
+/** Serialises `persist()` calls so two writers can never interleave. */
 let writeChain: Promise<void> = Promise.resolve();
 
-/**
- * Fills in tables a file written by an earlier version of the app doesn't have.
- *
- * Without this, adding a table would make every existing data file crash on the
- * first `.filter()`. An empty table is the honest answer for "this feature had not
- * been built when your file was written" — delete the file to reseed with data.
- */
-function withMissingTables(loaded: Partial<Database>): Database {
-  return {
-    users: loaded.users ?? [],
-    students: loaded.students ?? [],
-    teachers: loaded.teachers ?? [],
-    teacherAssignments: loaded.teacherAssignments ?? [],
-    subjects: loaded.subjects ?? [],
-    marks: loaded.marks ?? [],
-    attendance: loaded.attendance ?? [],
-    adaptabilityAssessments: loaded.adaptabilityAssessments ?? [],
-    physicalRecords: loaded.physicalRecords ?? [],
-    socialRecords: loaded.socialRecords ?? [],
-    oaaScores: loaded.oaaScores ?? [],
-    timetable: loaded.timetable ?? [],
-    announcements: loaded.announcements ?? [],
-    events: loaded.events ?? [],
-    eventRegistrations: loaded.eventRegistrations ?? [],
-    assignments: loaded.assignments ?? [],
-    submissions: loaded.submissions ?? [],
-    settings: loaded.settings ?? {
-      id: 'singleton',
-      academicYear: '2026–27',
-      currentSemester: 5,
-      attendanceThreshold: 75,
-      // Mirrors lib/oaa.ts DEFAULT_WEIGHTS. Only reached by a file written before
-      // settings existed — a fresh seed always carries its own row.
-      oaaWeights: { academic: 1, adaptability: 1, physical: 1, social: 0.5 },
-    },
-    auditLogs: loaded.auditLogs ?? [],
-  };
-}
-
-function readFromDisk(): Database | null {
-  if (!existsSync(DATA_FILE)) return null;
-
-  try {
-    return withMissingTables(JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Partial<Database>);
-  } catch (error) {
-    // A corrupt file must not be silently replaced — that would delete real data.
-    throw new Error(
-      `Data file at ${DATA_FILE} is not valid JSON. Fix or delete it to reseed. (${String(error)})`,
-    );
-  }
-}
-
-async function writeToDisk(snapshot: Database): Promise<void> {
-  mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-  const temp = `${DATA_FILE}.tmp`;
-  await writeFile(temp, JSON.stringify(snapshot, null, 2), 'utf8');
-  await rename(temp, DATA_FILE);
+export interface StoreStatus {
+  backend: string;
+  /** How the data got there on this start. */
+  origin: 'loaded' | 'seeded' | 'imported';
 }
 
 /**
- * Loads the dataset, seeding it on first run. Called once from `server.ts` before
- * the HTTP listener starts, so no request can observe a half-loaded store.
+ * Loads the dataset. On an empty Supabase database, an existing local JSON file
+ * is imported rather than a fresh seed — work done before the switch carries
+ * over. With neither, the seed runs. Called once from `server.ts` before the HTTP
+ * listener starts, so no request can observe a half-loaded store.
  */
-export async function initStore(): Promise<{ seeded: boolean; file: string }> {
-  const existing = readFromDisk();
+export async function initStore(): Promise<StoreStatus> {
+  const file = createFileStore(DATA_FILE);
+  persistence = env.SUPABASE_DB_URL
+    ? createPostgresStore(env.SUPABASE_DB_URL, env.SUPABASE_DB_CA_CERT)
+    : file;
 
+  const existing = await persistence.load();
   if (existing) {
     db = existing;
-    return { seeded: false, file: DATA_FILE };
+    return { backend: persistence.describe, origin: 'loaded' };
   }
 
-  db = await buildSeed();
-  await writeToDisk(db);
-  return { seeded: true, file: DATA_FILE };
+  if (persistence !== file && file.exists()) {
+    const local = await file.load();
+    if (local) {
+      db = local;
+      await persistence.save(db);
+      return { backend: persistence.describe, origin: 'imported' };
+    }
+  }
+
+  db = await buildSeed({ demo: env.SEED_DEMO === 'on' });
+  await persistence.save(db);
+  return { backend: persistence.describe, origin: 'seeded' };
 }
 
 export function getDb(): Database {
@@ -105,9 +71,23 @@ export function getDb(): Database {
   return db;
 }
 
-/** Flushes the in-memory dataset to disk. Writes are queued, never concurrent. */
+/**
+ * Saves the in-memory dataset. Writes are queued, never concurrent — and a failed
+ * write does not poison the queue: the next save still runs, and (for Postgres)
+ * retries whatever the failed one could not store.
+ */
 export function persist(): Promise<void> {
-  const snapshot = getDb();
-  writeChain = writeChain.then(() => writeToDisk(snapshot));
-  return writeChain;
+  const current = getDb();
+  const target = persistence;
+  if (!target) throw new Error('Store not initialised — call initStore() before handling requests.');
+
+  const next = writeChain.catch(() => undefined).then(() => target.save(current));
+  writeChain = next;
+  return next;
+}
+
+/** Waits for queued writes, then releases the database connection. */
+export async function closeStore(): Promise<void> {
+  await writeChain.catch(() => undefined);
+  await persistence?.close?.();
 }

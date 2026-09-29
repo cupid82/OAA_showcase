@@ -8,17 +8,16 @@ export default function NotFoundPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-ink-50 px-4 text-center">
-      <p className="text-sm font-semibold tracking-widest text-brand-600 uppercase">404</p>
-      <h1 className="mt-2 text-3xl font-semibold text-ink-900">Page not found</h1>
-      <p className="mt-2 max-w-sm text-sm text-ink-500">
-        That address doesn&apos;t exist in the portal. It may have moved, or it belongs to a module
-        that hasn&apos;t been built yet.
+      <p className="kicker text-brand-700">404</p>
+      <h1 className="mt-3 font-serif text-4xl text-ink-900">Nothing lives here</h1>
+      <p className="mt-3 max-w-sm text-ink-600">
+        That address doesn’t exist in OAA. It may have moved, or the link was mistyped.
       </p>
       <Link
         to={home}
-        className="mt-6 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+        className="kicker mt-8 border border-brand-600 bg-brand-600 px-5 py-3 text-white transition hover:border-brand-500 hover:bg-brand-500"
       >
-        {user ? 'Back to dashboard' : 'Back to home'}
+        {user ? 'Back to your dashboard' : 'Back to the home page'}
       </Link>
     </div>
   );

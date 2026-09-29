@@ -1,5 +1,10 @@
 # docs/ — the specs
 
+> **Superseded.** These specs describe the retired ERP-style portal (teacher and
+> admin modules, marks, attendance, the four-dimension OAA score). OAA is now a
+> student skills-and-opportunity platform — see `CLAUDE.md` at the repo root for
+> the current product, rules and architecture. The files below are kept as history.
+
 `plans.md` references these eight files by exact path. Steps 1, 4, 5, 6, 7, 9 and 11
 read them as the source of truth.
 

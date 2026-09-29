@@ -5,177 +5,87 @@ export interface NavItem {
   label: string;
   to: string;
   icon: IconName;
-  /** The plans.md step that builds this page. Undefined means it already exists. */
-  step?: number;
   blurb: string;
 }
 
+export interface RoleNav {
+  /** The modes — the left-hand list the whole app is organised around. */
+  primary: NavItem[];
+  /** Account things, below a rule. */
+  secondary: NavItem[];
+}
+
 /**
- * Single source of truth for each role's sidebar, dashboard cards, and routes.
- * Anything with a `step` is routed to the shared ComingSoon page until that step
- * of plans.md is built.
+ * Single source of truth for each role's sidebar. Every item here has a real,
+ * built page behind it — nothing in the sidebar is a placeholder.
  */
-export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
-  student: [
-    { label: 'Dashboard', to: '/student', icon: 'dashboard', blurb: 'Everything at a glance' },
-    {
-      label: 'Profile',
-      to: '/student/profile',
-      icon: 'user',
-      blurb: 'Personal and academic details',
-    },
-    {
-      label: 'Marks',
-      to: '/student/marks',
-      icon: 'book',
-      blurb: 'Subject-wise internal and external marks',
-    },
-    {
-      label: 'Attendance',
-      to: '/student/attendance',
-      icon: 'calendar',
-      blurb: 'Overall percentage and subject breakdown',
-    },
-    {
-      label: 'OAA Score',
-      to: '/student/oaa',
-      icon: 'radar',
-      blurb: 'Your four-dimension ability profile',
-    },
-    {
-      label: 'Leaderboard',
-      to: '/student/leaderboard',
-      icon: 'trophy',
-      blurb: 'Class, department and college rankings',
-    },
-    {
-      label: 'Timetable',
-      to: '/student/timetable',
-      icon: 'clock',
-      blurb: 'Your weekly class schedule',
-    },
-    {
-      label: 'Announcements',
-      to: '/student/announcements',
-      icon: 'megaphone',
-      blurb: 'Notices from staff and admin',
-    },
-    {
-      label: 'Events',
-      to: '/student/events',
-      icon: 'ticket',
-      blurb: 'Browse and register for college events',
-    },
-    {
-      label: 'Assignments',
-      to: '/student/assignments',
-      icon: 'clipboard',
-      blurb: 'Submissions and grades',
-    },
-  ],
-  teacher: [
-    { label: 'Dashboard', to: '/teacher', icon: 'dashboard', blurb: 'Your teaching day' },
-    {
-      label: 'My Classes',
-      to: '/teacher/classes',
-      icon: 'book',
-      blurb: 'Subjects and sections assigned to you',
-    },
-    {
-      label: 'Attendance',
-      to: '/teacher/attendance',
-      icon: 'calendar',
-      blurb: 'Mark a class for a subject and date',
-    },
-    {
-      label: 'Marks Entry',
-      to: '/teacher/marks',
-      icon: 'clipboard',
-      blurb: 'Spreadsheet-style marks entry',
-    },
-    {
-      label: 'Students',
-      to: '/teacher/students',
-      icon: 'users',
-      blurb: 'Search students and open their records',
-    },
-    {
-      label: 'Assessments',
-      to: '/teacher/assessments',
-      icon: 'radar',
-      blurb: 'Adaptability and social contribution ratings',
-    },
-    {
-      label: 'Timetable',
-      to: '/teacher/timetable',
-      icon: 'clock',
-      step: 14,
-      blurb: 'Periods you teach this week',
-    },
-  ],
-  admin: [
-    { label: 'Dashboard', to: '/admin', icon: 'dashboard', blurb: 'Institution summary' },
-    {
-      label: 'Students',
-      to: '/admin/students',
-      icon: 'users',
-      step: 9,
-      blurb: 'CRUD, filters and bulk CSV import',
-    },
-    {
-      label: 'Teachers',
-      to: '/admin/teachers',
-      icon: 'user',
-      step: 9,
-      blurb: 'Staff accounts and department assignment',
-    },
-    {
-      label: 'Departments',
-      to: '/admin/departments',
-      icon: 'building',
-      step: 9,
-      blurb: 'Manage departments',
-    },
-    {
-      label: 'Subjects',
-      to: '/admin/subjects',
-      icon: 'book',
-      step: 9,
-      blurb: 'Subjects, semesters and max marks',
-    },
-    {
-      label: 'Events',
-      to: '/admin/events',
-      icon: 'ticket',
-      step: 11,
-      blurb: 'Create events and publish notifications',
-    },
-    {
-      label: 'Announcements',
-      to: '/admin/announcements',
-      icon: 'megaphone',
-      step: 12,
-      blurb: 'Notices with scheduled publishing',
-    },
-    {
-      label: 'Analytics',
-      to: '/admin/analytics',
-      icon: 'chart',
-      step: 10,
-      blurb: 'Performance, attendance and grade charts',
-    },
-    {
-      label: 'Settings',
-      to: '/admin/settings',
-      icon: 'settings',
-      step: 9,
-      blurb: 'Academic year, OAA weights, thresholds',
-    },
-  ],
+export const NAV_BY_ROLE: Record<Role, RoleNav> = {
+  student: {
+    primary: [
+      { label: 'Dashboard', to: '/student', icon: 'dashboard', blurb: 'What to do next' },
+      {
+        label: 'Projects',
+        to: '/student/projects',
+        icon: 'rocket',
+        blurb: 'Build things, find a team, ship them',
+      },
+      {
+        label: 'Skills',
+        to: '/student/skills',
+        icon: 'layers',
+        blurb: 'Your skill map, and the proof behind it',
+      },
+      {
+        label: 'Events',
+        to: '/student/events',
+        icon: 'ticket',
+        blurb: 'Hackathons, workshops, contests and talks',
+      },
+      {
+        label: 'Jobs',
+        to: '/student/jobs',
+        icon: 'briefcase',
+        blurb: 'Internships, jobs and recruitment drives',
+      },
+      {
+        label: 'Burnout',
+        to: '/student/burnout',
+        icon: 'flame',
+        blurb: 'A private check on how you are coping',
+      },
+      {
+        label: 'Leaderboard',
+        to: '/student/leaderboard',
+        icon: 'trophy',
+        blurb: 'Momentum from what you build and learn',
+      },
+    ],
+    secondary: [
+      {
+        label: 'Connected apps',
+        to: '/student/connections',
+        icon: 'link',
+        blurb: 'GitHub, LinkedIn, X and more',
+      },
+      {
+        label: 'Settings',
+        to: '/student/settings',
+        icon: 'settings',
+        blurb: 'Goal, privacy, alerts',
+      },
+    ],
+  },
+  admin: {
+    primary: [
+      { label: 'Overview', to: '/admin', icon: 'dashboard', blurb: 'How the platform is used' },
+      { label: 'Events', to: '/admin/events', icon: 'ticket', blurb: 'Publish and review events' },
+      { label: 'Jobs', to: '/admin/jobs', icon: 'briefcase', blurb: 'Publish and review openings' },
+    ],
+    secondary: [],
+  },
 };
 
 export const ROLE_LABEL: Record<Role, string> = {
   student: 'Student',
-  teacher: 'Teacher',
-  admin: 'Administrator',
+  admin: 'Moderator',
 };

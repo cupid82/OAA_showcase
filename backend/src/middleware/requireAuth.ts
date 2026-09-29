@@ -1,16 +1,20 @@
 /**
  * Authentication and authorisation guards.
  *
- * Rule 4 of CLAUDE.md: a protected route checks **role and ownership**. Being "a
- * student" is never enough to read `/api/students/42/marks` — you must be
- * student 42. `requireSelfOrStaff` is what enforces that second half.
+ * Rule 4 of CLAUDE.md: a protected route checks **role and ownership**. Student
+ * routes never take a student id from the URL — `requireStudent` resolves the
+ * caller's own record from their token, so there is no id to tamper with. Rows
+ * inside a student's area (a project, a certificate) are then checked against
+ * that id in the service, in one named function per module.
  */
 import type { Request, RequestHandler } from 'express';
 
+import { googleSignInEnabled } from '../config/env.js';
 import { getDb } from '../data/store.js';
 import type { Role } from '../data/types.js';
 import { HttpError } from '../lib/httpError.js';
-import { verifyToken } from '../services/auth.service.js';
+import { isSupabaseToken, verifySupabaseToken } from '../lib/supabaseAuth.js';
+import { currentRole, userForAuthId, verifyToken } from '../services/auth.service.js';
 
 export interface AuthenticatedUser {
   id: string;
@@ -21,12 +25,12 @@ declare module 'express-serve-static-core' {
   interface Request {
     /** Set by `requireAuth`. */
     user?: AuthenticatedUser;
-    /** Set by `requireSelfOrStaff`. Always an id the caller is allowed to read. */
+    /** Set by `requireStudent`. Always the caller's own student record. */
     studentId?: string;
   }
 }
 
-function bearerToken(req: Request): string | null {
+export function bearerToken(req: Request): string | null {
   const header = req.header('authorization');
   if (!header?.startsWith('Bearer ')) return null;
 
@@ -34,18 +38,38 @@ function bearerToken(req: Request): string | null {
   return token.length > 0 ? token : null;
 }
 
-/** Rejects anything without a valid, unexpired token. */
+/** The OAA user id behind a token of either kind. */
+async function userIdFor(token: string): Promise<string> {
+  if (googleSignInEnabled && isSupabaseToken(token)) {
+    const identity = await verifySupabaseToken(token);
+    const user = userForAuthId(identity.id);
+    // The browser exchanges a fresh Google sign-in at /api/auth/google first;
+    // reaching here unlinked means that step was skipped or failed.
+    if (!user) throw HttpError.unauthorized('Finish signing in with Google first.');
+    return user.id;
+  }
+
+  return verifyToken(token).sub;
+}
+
+/**
+ * Rejects anything without a valid, unexpired token for an account that still
+ * exists: a Supabase token from a Google sign-in, or OAA's own token from a
+ * roll-number sign-in. The role is read from the account, never trusted from the
+ * token.
+ */
 export const requireAuth: RequestHandler = (req, _res, next) => {
   const token = bearerToken(req);
   if (!token) return next(HttpError.unauthorized('Sign in to continue.'));
 
-  try {
-    const { sub, role } = verifyToken(token);
-    req.user = { id: sub, role };
-    next();
-  } catch (error) {
-    next(error);
-  }
+  userIdFor(token)
+    .then((id) => {
+      const role = currentRole(id);
+      if (!role) throw HttpError.unauthorized('This account no longer exists.');
+      req.user = { id, role };
+      next();
+    })
+    .catch(next);
 };
 
 /** Must run after `requireAuth`. */
@@ -61,45 +85,37 @@ export function requireRole(...allowed: Role[]): RequestHandler {
   };
 }
 
-/**
- * Resolves `:studentId` (or the literal `me`) to a student record and checks the
- * caller may see it: the student themselves, or a teacher/admin.
- *
- * The resolved id is attached to the request so handlers never re-derive it —
- * re-deriving is how an ownership check drifts away from the query it guards.
- */
-export const requireSelfOrStaff: RequestHandler = (req, _res, next) => {
-  const user = req.user;
-  if (!user) return next(HttpError.unauthorized('Sign in to continue.'));
+function resolveStudent(requireOnboarded: boolean): RequestHandler {
+  return (req, _res, next) => {
+    const user = req.user;
+    if (!user) return next(HttpError.unauthorized('Sign in to continue.'));
+    if (user.role !== 'student') {
+      return next(HttpError.forbidden('This part of OAA is for student accounts.'));
+    }
 
-  const { students } = getDb();
-  const param = req.params.studentId ?? 'me';
-
-  if (user.role === 'student') {
-    const own = students.find((student) => student.userId === user.id);
+    const own = getDb().students.find((student) => student.userId === user.id);
     if (!own) return next(HttpError.forbidden('This account is not linked to a student record.'));
 
-    // A student may only ever address their own record — by id or by "me".
-    if (param !== 'me' && param !== own.id) {
-      return next(HttpError.forbidden('You can only view your own record.'));
+    // The web app routes a new student to onboarding; this makes it a rule rather
+    // than a courtesy, and guarantees the details onboarding collects exist.
+    if (requireOnboarded && own.onboardedAt === null) {
+      return next(HttpError.forbidden('Finish setting up your account first.'));
     }
 
     req.studentId = own.id;
-    return next();
-  }
+    next();
+  };
+}
 
-  // Staff may read any student, but "me" is meaningless for them.
-  if (param === 'me') {
-    return next(HttpError.badRequest('Staff accounts must request a specific student id.'));
-  }
+/**
+ * Must run after `requireAuth`. Admits onboarded student accounts only, and
+ * attaches the caller's own student id — the only one any handler behind it will
+ * ever use.
+ */
+export const requireStudent: RequestHandler = resolveStudent(true);
 
-  if (!students.some((student) => student.id === param)) {
-    return next(HttpError.notFound('Student not found.'));
-  }
-
-  req.studentId = param;
-  next();
-};
+/** As `requireStudent`, but also admits a student who hasn't finished onboarding. */
+export const requireStudentAccount: RequestHandler = resolveStudent(false);
 
 /** Narrows the request field once, so handlers stay free of non-null assertions. */
 export function studentIdOf(req: Request): string {
