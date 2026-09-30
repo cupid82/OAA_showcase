@@ -28,7 +28,8 @@ export const MATCH_WEIGHTS = { skills: 60, track: 20, interest: 10, nice: 10 } a
 export const RECOMMEND_THRESHOLD = 55;
 
 export interface MatchStudent {
-  year: number;
+  /** Null when there's no college record yet (a Google sign-up). */
+  year: number | null;
   trackId: string | null;
   interests: readonly Interest[];
   /** Every skill the student lists, with how well it is evidenced. */
@@ -88,7 +89,10 @@ export function matchListing(student: MatchStudent, listing: MatchListing): Matc
 
   return {
     score: Math.min(100, Math.max(0, score)),
-    eligible: listing.eligibleYears.length === 0 || listing.eligibleYears.includes(student.year),
+    // An unknown year can't be shown to qualify for a listing that names years.
+    eligible:
+      listing.eligibleYears.length === 0 ||
+      (student.year !== null && listing.eligibleYears.includes(student.year)),
     have: [...have].sort((a, b) => strength(b) - strength(a)),
     missing,
     niceHave,

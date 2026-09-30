@@ -68,7 +68,11 @@ function upgradeFromV2(parsed: Partial<Database>): Partial<Database> {
   const students = parsed.students ?? [];
   return {
     ...parsed,
-    meta: { id: 'singleton', schemaVersion: SCHEMA_VERSION, seededAt: parsed.meta?.seededAt ?? new Date().toISOString() },
+    meta: {
+      id: 'singleton',
+      schemaVersion: SCHEMA_VERSION,
+      seededAt: parsed.meta?.seededAt ?? new Date().toISOString(),
+    },
     users: (parsed.users ?? []).map((user): UserRow => {
       const legacy = user as Partial<UserRow> & Omit<UserRow, 'email' | 'authId'>;
       return {
@@ -81,6 +85,19 @@ function upgradeFromV2(parsed: Partial<Database>): Partial<Database> {
       };
     }),
   };
+}
+
+/**
+ * A stored document in this build's shape: a schema-2 one is upgraded, a current
+ * one gains any tables it predates. Null for any other schema — the caller sets
+ * it aside rather than half-reading it. Shared by every store that keeps the
+ * dataset as one JSON document (this file, and Durable Object storage).
+ */
+export function fromStoredDocument(parsed: Partial<Database>): Database | null {
+  const version = parsed.meta?.schemaVersion ?? 1;
+  if (version === 2) return withMissingTables(upgradeFromV2(parsed));
+  if (version !== SCHEMA_VERSION) return null;
+  return withMissingTables(parsed);
 }
 
 export function createFileStore(file: string): Persistence & { exists(): boolean } {
@@ -116,14 +133,12 @@ export function createFileStore(file: string): Persistence & { exists(): boolean
         );
       }
 
-      const version = parsed.meta?.schemaVersion ?? 1;
-      if (version === 2) parsed = upgradeFromV2(parsed);
-      else if (version !== SCHEMA_VERSION) {
+      const db = fromStoredDocument(parsed);
+      if (!db) {
+        const version = parsed.meta?.schemaVersion ?? 1;
         setAside(`Data file is schema ${version}; this build expects ${SCHEMA_VERSION}.`);
-        return null;
       }
-
-      return withMissingTables(parsed);
+      return db;
     },
 
     async save(db: Database) {

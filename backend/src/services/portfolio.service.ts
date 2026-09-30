@@ -21,8 +21,9 @@ export interface Portfolio {
   name: string;
   headline: string;
   bio: string;
-  department: string;
-  year: number;
+  /** Null until the student has a college record. */
+  department: string | null;
+  year: number | null;
   track: string | null;
   projects: {
     id: string;

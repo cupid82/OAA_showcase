@@ -176,13 +176,19 @@ export function createPostgresStore(url: string, caCertPath?: string): Persisten
       }
 
       const loaded = db as unknown as Database;
-      if (!loaded.settings) throw new Error('The database has no settings row. Reseed or restore it.');
+      if (!loaded.settings)
+        throw new Error('The database has no settings row. Reseed or restore it.');
       orderCatalogue(loaded);
       return loaded;
     },
 
     async save(db) {
-      const changes: { spec: TableSpec; upserts: Row[]; deletes: string[]; now: Map<string, string> }[] = [];
+      const changes: {
+        spec: TableSpec;
+        upserts: Row[];
+        deletes: string[];
+        now: Map<string, string>;
+      }[] = [];
 
       // Snapshot synchronously: requests that change the data while this save
       // is in flight are picked up by the next one.
@@ -210,9 +216,10 @@ export function createPostgresStore(url: string, caCertPath?: string): Persisten
         // adding. The foreign keys are deferred as well, so this is belt and braces.
         for (const change of [...changes].reverse()) {
           if (change.deletes.length === 0) continue;
-          await client.query(`delete from ${qualified(change.spec.table)} where "id" = any($1::text[])`, [
-            change.deletes,
-          ]);
+          await client.query(
+            `delete from ${qualified(change.spec.table)} where "id" = any($1::text[])`,
+            [change.deletes],
+          );
         }
         for (const change of changes) {
           if (change.upserts.length > 0) await upsert(client, change.spec, change.upserts);

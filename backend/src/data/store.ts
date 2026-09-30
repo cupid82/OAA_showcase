@@ -6,6 +6,8 @@
  * restarts is decided once, here:
  *
  * - **Supabase Postgres** when `SUPABASE_DB_URL` is set — the real deployment.
+ * - **Durable Object storage** on Cloudflare Workers, which have no disk. The
+ *   Worker entry (`worker.ts`) passes it in: only the Durable Object holds it.
  * - **A JSON file** otherwise — for tests, CI and working offline.
  *
  * Nothing above this file knows which one is in use. That is the seam: routes and
@@ -37,14 +39,19 @@ export interface StoreStatus {
 /**
  * Loads the dataset. On an empty Supabase database, an existing local JSON file
  * is imported rather than a fresh seed — work done before the switch carries
- * over. With neither, the seed runs. Called once from `server.ts` before the HTTP
- * listener starts, so no request can observe a half-loaded store.
+ * over. With neither, the seed runs. Called once from `server.ts` (or
+ * `worker.ts`) before any request is served, so no request can observe a
+ * half-loaded store.
+ *
+ * `given` overrides the choice — `worker.ts` passes Durable Object storage.
  */
-export async function initStore(): Promise<StoreStatus> {
+export async function initStore(given?: Persistence): Promise<StoreStatus> {
   const file = createFileStore(DATA_FILE);
-  persistence = env.SUPABASE_DB_URL
-    ? createPostgresStore(env.SUPABASE_DB_URL, env.SUPABASE_DB_CA_CERT)
-    : file;
+  persistence =
+    given ??
+    (env.SUPABASE_DB_URL
+      ? createPostgresStore(env.SUPABASE_DB_URL, env.SUPABASE_DB_CA_CERT)
+      : file);
 
   const existing = await persistence.load();
   if (existing) {
@@ -52,7 +59,8 @@ export async function initStore(): Promise<StoreStatus> {
     return { backend: persistence.describe, origin: 'loaded' };
   }
 
-  if (persistence !== file && file.exists()) {
+  // A given store has no local file to take over (a Worker has no disk).
+  if (!given && persistence !== file && file.exists()) {
     const local = await file.load();
     if (local) {
       db = local;
@@ -79,7 +87,8 @@ export function getDb(): Database {
 export function persist(): Promise<void> {
   const current = getDb();
   const target = persistence;
-  if (!target) throw new Error('Store not initialised — call initStore() before handling requests.');
+  if (!target)
+    throw new Error('Store not initialised — call initStore() before handling requests.');
 
   const next = writeChain.catch(() => undefined).then(() => target.save(current));
   writeChain = next;

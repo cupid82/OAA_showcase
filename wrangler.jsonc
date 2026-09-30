@@ -1,12 +1,60 @@
+// OAA on Cloudflare Workers — one Worker serves everything:
+//   /api/*      → backend/src/worker.ts → a Durable Object running the Express API
+//   everything  → the built frontend (frontend/dist), index.html for app routes
+// See "Deploying to Cloudflare" in README.md.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // Must match the Worker's name in the Cloudflare dashboard.
   "name": "oaa-showcase",
-  "compatibility_date": "2024-09-23",
+  "main": "backend/src/worker.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Runs before every deploy (and `wrangler dev`), so the dashboard's own build
+  // command can stay empty.
   "build": {
-    "command": "npm run build:frontend"
+    "command": "npm run build:frontend",
   },
+
   "assets": {
     "directory": "./frontend/dist",
-    "not_found_handling": "single-page-application"
-  }
+    "binding": "ASSETS",
+    // Client-side routes (/student/…, /admin/…, /p/…) get index.html.
+    "not_found_handling": "single-page-application",
+    // Only the API runs Worker code; pages and files are served directly.
+    "run_worker_first": ["/api/*"],
+  },
+
+  // The API and its data: one SQLite-backed Durable Object (works on the free plan).
+  "durable_objects": {
+    "bindings": [{ "name": "OAA_API", "class_name": "OaaApi" }],
+  },
+  // `migrations`, not the newer `exports` field, on purpose: with `exports`,
+  // `wrangler versions upload` — what Cloudflare runs for non-production
+  // branches — always fails, and a Worker deployed with `exports` can never
+  // switch back. Never edit or remove an applied migration; add a new tag.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["OaaApi"] }],
+
+  // Swaps for two of Express 4's dependencies, in this bundle only (Node keeps
+  // the originals):
+  // - `depd` builds functions with `new Function`, which Workers forbid; the
+  //   stand-in keeps its API without it.
+  // - iconv-lite 0.4 (body-parser) sees Node's `stream` module under
+  //   nodejs_compat and crashes loading files its browser build leaves out;
+  //   0.6.3 (the version Express 5 uses) handles that. Installed under its own
+  //   name in package.json.
+  "alias": {
+    "depd": "./backend/src/cloudflare/depd.cjs",
+    "iconv-lite": "iconv-lite-workers",
+  },
+
+  "vars": {
+    "NODE_ENV": "production",
+  },
+  // Keep variables added in the dashboard when this file deploys.
+  "keep_vars": true,
+  "observability": {
+    "enabled": true,
+  },
+  "upload_source_maps": true,
 }

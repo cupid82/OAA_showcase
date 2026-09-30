@@ -22,10 +22,11 @@ import { assertSkillsExist, findStudent, findTrack, nowISO, preferencesOf } from
 export interface Me {
   profile: {
     id: string;
-    rollNo: string;
+    /** These three are null until the student has a college record. */
+    rollNo: string | null;
     name: string;
-    department: string;
-    year: number;
+    department: string | null;
+    year: number | null;
     email: string;
     handle: string;
     headline: string;
@@ -35,8 +36,8 @@ export interface Me {
     weeklyHours: number | null;
     onboardedAt: string | null;
   };
-  /** Where the read-only fields came from. */
-  records: { source: string; url: string; syncedAt: string };
+  /** Where the read-only fields came from. `syncedAt` is null when never synced. */
+  records: { source: string; url: string; syncedAt: string | null };
   track: { id: string; name: string; summary: string } | null;
   preferences: {
     notify: Record<NotificationCategory, boolean>;

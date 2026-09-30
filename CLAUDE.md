@@ -46,6 +46,9 @@ Everything in the sidebar is built — there are no placeholder pages.
   reseed. `meta.schemaVersion` (`SCHEMA_VERSION` in `data/types.ts`) guards the
   shape: a file from another schema is renamed to `*.backup-<stamp>.json`, never
   deleted, and a fresh one is seeded. Bump the version when you reshape a table.
+- **Deployed on Cloudflare Workers** (see below): there the same JSON document
+  lives in a Durable Object's storage (`data/durableObjectStore.ts`), set aside
+  the same way on a schema change.
 - **GitHub sync is real**: `lib/github.ts` calls GitHub's public REST API, only
   when a student presses Sync. `GITHUB_TOKEN` (optional, no scopes) raises the
   60-requests-an-hour limit. Every other provider is a stored link, never called.
@@ -121,6 +124,28 @@ Passwords: every student `student123`, moderator `ADM01` / `admin123`.
   "not enough data". Computed on read (deadlines move daily; nobody ranks on it).
   Private to the student; `at-risk` or a snooze puts Today into focus mode.
 
+## Cloudflare Workers — the deployment
+
+`wrangler.jsonc` deploys one Worker named `oaa-showcase` (it must match the
+dashboard). Pages are static assets from `frontend/dist`; `/api/*` goes through
+`backend/src/worker.ts` to **one** Durable Object that runs the same Express app
+via `handleAsNodeRequest`. One instance owns the in-memory store, as one Node
+process does, and gets a Durable Object's CPU budget (bcrypt won't fit a plain
+Worker's 10 ms on the free plan). Rules that keep it working:
+
+- `worker.ts` imports backend modules **inside** `start()`, never at the top:
+  a Worker's top level runs at deploy time, and `config/env.ts` reads the
+  environment (and requires JWT_SECRET) as it loads. The Worker generates and
+  stores a JWT secret when none is set.
+- Workers forbid `new Function`/`eval`. `depd` and `iconv-lite` are swapped in
+  the Worker bundle (`alias` in wrangler.jsonc); morgan is off there via
+  `createApp({ requestLog: false })`. Check a new runtime dependency for either.
+- Durable Object classes use the legacy `migrations` array, **not** `exports` —
+  with `exports`, `wrangler versions upload` (preview branches) always fails, and
+  it's one-way. Add a new tag; never edit an applied migration.
+- Test backend changes with `npm run dev:worker` as well as Node — it is the
+  runtime Cloudflare uses, and it caught both crashes above.
+
 ## Non-negotiable rules
 
 1. **ESM imports need `.js`**: `import { x } from './foo.js'` even though the file is `foo.ts`.
@@ -170,8 +195,9 @@ Passwords: every student `student123`, moderator `ADM01` / `admin123`.
 ## Commands
 
 - `npm run dev` — both servers (backend :4000, frontend :5173)
+- `npm run dev:worker` — the whole app in Cloudflare's runtime (:8787)
 - `npm run typecheck` — must pass before any commit
-- `npm test` — backend engine tests
+- `npm test` — backend engine tests and the Durable Object store tests
 - `npm run format` — prettier (CI runs `format:check`)
 
 ## Before you finish any task

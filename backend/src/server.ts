@@ -7,12 +7,14 @@ import { closeStore, initStore } from './data/store.js';
 const { backend, origin } = await initStore();
 console.log(`[backend] data ${origin} — ${backend}`);
 console.log(
-  `[backend] sign-in: ${[
-    googleSignInEnabled ? 'Google (Supabase)' : null,
-    env.PASSWORD_LOGIN === 'on' ? 'roll number + password' : null,
-  ]
-    .filter(Boolean)
-    .join(', ') || 'none configured'}`,
+  `[backend] sign-in: ${
+    [
+      googleSignInEnabled ? 'Google (Supabase)' : null,
+      env.PASSWORD_LOGIN === 'on' ? 'roll number + password' : null,
+    ]
+      .filter(Boolean)
+      .join(', ') || 'none configured'
+  }`,
 );
 
 const app = createApp();

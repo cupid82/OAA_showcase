@@ -3,3 +3,6 @@ dist/
 build/
 coverage/
 package-lock.json
+.wrangler/
+# The owner's working notes — kept as written.
+idea md/

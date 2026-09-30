@@ -64,9 +64,13 @@ and jobs lists with a review queue for student-shared listings.
 │   ├── pages/admin/            # moderator console
 │   └── pages/portfolio/        # public /p/:handle
 └── backend/src/
+    ├── server.ts               # Node entry point
+    ├── worker.ts               # Cloudflare Workers entry point (see wrangler.jsonc)
+    ├── cloudflare/             # Worker-only type declarations and a dependency stand-in
     ├── lib/                    # pure engines (skillProof, momentum, matching,
     │                           # burnout, dates) + github client + helpers
-    ├── data/                   # types, catalogue, seed, JSON store
+    ├── data/                   # types, catalogue, seed, and the stores:
+    │                           # JSON file, Postgres, Durable Object
     ├── services/               # the rules — one module per area
     ├── models/                 # zod request schemas
     ├── routes/                 # thin HTTP layer
@@ -75,14 +79,16 @@ and jobs lists with a review queue for student-shared listings.
 
 ## Scripts
 
-| Command             | What it does                                            |
-| ------------------- | ------------------------------------------------------- |
-| `npm run dev`       | Backend and frontend in watch mode                      |
-| `npm run build`     | Type-checks and builds both workspaces                  |
-| `npm start`         | Runs the built backend                                  |
-| `npm run typecheck` | Type-checks without emitting                            |
-| `npm test`          | Engine tests (skill proof, momentum, matching, burnout) |
-| `npm run format`    | Prettier over the repo                                  |
+| Command              | What it does                                                          |
+| -------------------- | --------------------------------------------------------------------- |
+| `npm run dev`        | Backend and frontend in watch mode                                    |
+| `npm run dev:worker` | The whole app as Cloudflare runs it, at http://localhost:8787         |
+| `npm run build`      | Type-checks and builds the frontend (`build:all` builds both)         |
+| `npm start`          | Runs the built backend                                                |
+| `npm run deploy`     | Deploys to Cloudflare Workers from your machine (`wrangler deploy`)   |
+| `npm run typecheck`  | Type-checks without emitting                                          |
+| `npm test`           | Engine tests (skill proof, momentum, matching, burnout) and the store |
+| `npm run format`     | Prettier over the repo                                                |
 
 ## API
 
@@ -140,14 +146,63 @@ reseed.** A data file written by a different schema version is moved aside to
 
 `store.ts` is the seam: routes call services, services call the store, so replacing
 it with a real database touches that file and the service queries and nothing above.
+The same document can instead live in Supabase Postgres (`SUPABASE_DB_URL`) or, on
+Cloudflare, in a Durable Object — see below.
+
+## Deploying to Cloudflare Workers
+
+One Worker serves everything, configured in `wrangler.jsonc`:
+
+- **The pages** — `frontend/dist`, built before every deploy, served as static assets.
+  Any app route (`/student/…`, `/p/…`) gets `index.html`.
+- **The API** — `/api/*` goes through `backend/src/worker.ts` to one Durable Object
+  that runs the same Express app as `npm start`. It holds the data in memory and
+  saves it to its own storage (`data/durableObjectStore.ts`), so nothing else needs
+  setting up — no database, no disk. SQLite-backed Durable Objects are on the free plan.
+
+Nothing is required in the dashboard. On first start the API seeds the demo data and
+generates its own JWT secret, and both are kept in the Durable Object across deploys.
+
+**Connect the repository** (Workers & Pages → your Worker → Settings → Build):
+
+| Setting                   | Value                                                |
+| ------------------------- | ---------------------------------------------------- |
+| Worker name               | `oaa-showcase` — must match `name` in wrangler.jsonc |
+| Production branch         | `main`                                               |
+| Root directory            | empty (the repository root)                          |
+| Build command             | empty — `wrangler.jsonc` builds the frontend         |
+| Deploy command            | `npx wrangler deploy` (the default)                  |
+| Non-production deploy cmd | `npx wrangler versions upload` (the default)         |
+
+**Optional secrets** (Settings → Variables and Secrets → add as _Secret_):
+
+| Secret         | Why                                                                                                                          |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN` | Recommended. Workers share outgoing IPs, so GitHub's 60/hour anonymous limit runs out fast. A token with no scopes lifts it. |
+| `JWT_SECRET`   | Only to choose your own (32+ characters). Changing it signs everyone out.                                                    |
+
+Things to know:
+
+- `npm run dev:worker` runs the Worker locally, the same runtime Cloudflare uses. It
+  reads `.dev.vars` (or, without one, the root `.env`) for local variables; local
+  data lives in `.wrangler/state`. Both are gitignored.
+- The data belongs to one Durable Object, named in `worker.ts`. Renaming it — or the
+  class, or the Worker — starts from an empty seed.
+- `wrangler.jsonc` swaps two of Express 4's dependencies in the Worker bundle only:
+  Workers forbid `new Function`, which `depd` uses, and the version of iconv-lite
+  body-parser ships crashes under `nodejs_compat`. Morgan is off there for the same
+  reason; Cloudflare logs every request itself (Observability tab).
+- Durable Object classes use `migrations`, not `exports`: with `exports`, the
+  `versions upload` that preview branches run always fails, and there's no way back.
+  Add a new migration tag for a new class; never edit an applied one.
 
 ## Environment variables
 
 Copy `.env.example` to `.env` in each workspace. Only `VITE_`-prefixed variables reach
 the browser — never put secrets in `frontend/.env`.
 
-| Variable       | Where   | Notes                                                   |
-| -------------- | ------- | ------------------------------------------------------- |
-| `JWT_SECRET`   | backend | Required, 32+ characters                                |
-| `GITHUB_TOKEN` | backend | Optional. A no-scope token lifts GitHub's 60/hour limit |
-| `DATA_FILE`    | backend | JSON store path, default `data/oaa-data.json`           |
+| Variable       | Where   | Notes                                                    |
+| -------------- | ------- | -------------------------------------------------------- |
+| `JWT_SECRET`   | backend | Required on Node, 32+ characters. Optional on Cloudflare |
+| `GITHUB_TOKEN` | backend | Optional. A no-scope token lifts GitHub's 60/hour limit  |
+| `DATA_FILE`    | backend | JSON store path, default `data/oaa-data.json`            |

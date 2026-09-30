@@ -31,7 +31,8 @@ authRouter.post(
 authRouter.post(
   '/google',
   asyncHandler(async (req, res) => {
-    if (!googleSignInEnabled) throw HttpError.notFound('Google sign-in is not set up on this server.');
+    if (!googleSignInEnabled)
+      throw HttpError.notFound('Google sign-in is not set up on this server.');
     const token = bearerToken(req);
     if (!token) throw HttpError.unauthorized('Sign in with Google first.');
 

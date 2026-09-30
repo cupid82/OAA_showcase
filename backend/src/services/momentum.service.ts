@@ -53,8 +53,9 @@ export interface LeaderboardRow {
   name: string;
   /** Present only when their portfolio is public — the name becomes a link. */
   handle: string | null;
-  department: string;
-  year: number;
+  /** Null until the student has a college record. */
+  department: string | null;
+  year: number | null;
   points: number;
   breakdown: Omit<MomentumTotals, 'total'>;
   isYou: boolean;
@@ -79,10 +80,17 @@ export interface Leaderboard {
   pointsTable: MomentumPoints;
 }
 
+/**
+ * An unknown department or year matches nobody else — two students without a
+ * college record are not in the same department — but the viewer is always in
+ * their own scope.
+ */
 function inScope(viewer: StudentRow, other: StudentRow, scope: LeaderboardQuery['scope']): boolean {
-  if (scope === 'college') return true;
-  if (scope === 'department') return other.department === viewer.department;
-  return other.year === viewer.year;
+  if (scope === 'college' || other.id === viewer.id) return true;
+  if (scope === 'department') {
+    return viewer.department !== null && other.department === viewer.department;
+  }
+  return viewer.year !== null && other.year === viewer.year;
 }
 
 export function getLeaderboard(viewerId: string, query: LeaderboardQuery): Leaderboard {
@@ -144,8 +152,10 @@ export function getLeaderboard(viewerId: string, query: LeaderboardQuery): Leade
     query.scope === 'college'
       ? 'the whole college'
       : query.scope === 'department'
-        ? viewer.department
-        : `year ${viewer.year}`;
+        ? (viewer.department ?? 'your department (not on record yet)')
+        : viewer.year !== null
+          ? `year ${viewer.year}`
+          : 'your year (not on record yet)';
 
   return {
     window: query.window,

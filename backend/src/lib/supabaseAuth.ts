@@ -61,7 +61,8 @@ function toIdentity(source: {
   user_metadata?: unknown;
   is_anonymous?: unknown;
 }): SupabaseIdentity {
-  const id = typeof source.sub === 'string' ? source.sub : typeof source.id === 'string' ? source.id : '';
+  const id =
+    typeof source.sub === 'string' ? source.sub : typeof source.id === 'string' ? source.id : '';
   const app = asRecord(source.app_metadata);
   const meta = asRecord(source.user_metadata);
   const providers = Array.isArray(app.providers)
@@ -70,7 +71,11 @@ function toIdentity(source: {
       ? [app.provider]
       : [];
   const name =
-    typeof meta.full_name === 'string' ? meta.full_name : typeof meta.name === 'string' ? meta.name : null;
+    typeof meta.full_name === 'string'
+      ? meta.full_name
+      : typeof meta.name === 'string'
+        ? meta.name
+        : null;
 
   if (!id) throw HttpError.unauthorized('That sign-in token has no user.');
 
@@ -123,7 +128,8 @@ async function verifyWithAuthServer(token: string): Promise<SupabaseIdentity> {
 // --- Public ------------------------------------------------------------------------------
 
 export async function verifySupabaseToken(token: string): Promise<SupabaseIdentity> {
-  if (!issuer || !jwks) throw HttpError.unauthorized('Google sign-in is not configured on this server.');
+  if (!issuer || !jwks)
+    throw HttpError.unauthorized('Google sign-in is not configured on this server.');
 
   let alg: string | undefined;
   try {
