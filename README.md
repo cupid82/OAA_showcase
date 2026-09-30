@@ -4,7 +4,7 @@ A student skills-and-opportunity platform. Students build projects, grow and pro
 skills, find events and jobs, keep a private eye on burnout, and earn momentum on an
 opt-in leaderboard. It sits **beside** the college ERP rather than copying it: marks,
 attendance and fees stay in the ERP, and OAA links out to it.
-
+live: https://oaa-showcase.amithd252.workers.dev/
 | Layer    | Stack                                         | Dev URL               |
 | -------- | --------------------------------------------- | --------------------- |
 | Frontend | React 18 + TypeScript + Vite + Tailwind v4    | http://localhost:5173 |
